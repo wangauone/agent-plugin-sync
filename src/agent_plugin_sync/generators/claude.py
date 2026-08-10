@@ -1,4 +1,4 @@
-"""Emit the Claude Code manifest: .claude-plugin/plugin.json
+"""Generate the Claude Code manifest: .claude-plugin/plugin.json
 
 Claude is not an Agent Plugin spec client, so its MCP config is carried **inline**
 in the manifest's `mcpServers` field (not a root `.mcp.json`). That keeps the only
@@ -12,15 +12,37 @@ from __future__ import annotations
 
 from typing import Any
 
-from agent_plugin_sync.emit import base
-from agent_plugin_sync.io import serialize
-from agent_plugin_sync.model import Model
-from agent_plugin_sync.util import copy_present
+from agent_plugin_sync import io, model, util
+from agent_plugin_sync.generators import artifact
 
 # Claude exposes the plugin's install dir as ${CLAUDE_PLUGIN_ROOT}; the spec uses
 # ${PLUGIN_ROOT}. Translate the latter to the former in path-bearing fields.
 _SPEC_ROOT = "${PLUGIN_ROOT}"
 _CLAUDE_ROOT = "${CLAUDE_PLUGIN_ROOT}"
+
+
+def generate_claude(plugin_model: model.Model) -> list[artifact.GeneratedFile]:
+    plugin = plugin_model.plugin
+    google = plugin_model.google
+
+    out: dict[str, Any] = {"name": plugin["name"]}
+    util.copy_present(
+        out,
+        plugin,
+        ["version", "description", "author", "homepage", "license", "repository"],
+    )
+    if plugin_model.has_skills:
+        out["skills"] = "./skills/"
+
+    config = google.get("config", [])
+    if config:
+        out["userConfig"] = _to_user_config(config)
+
+    servers = (plugin_model.mcp or {}).get("mcpServers") or {}
+    if servers:
+        out["mcpServers"] = {name: _to_claude_server(s) for name, s in servers.items()}
+
+    return [artifact.GeneratedFile(".claude-plugin/plugin.json", io.serialize(out))]
 
 
 def _to_user_config(config: list[dict[str, Any]]) -> dict[str, Any]:
@@ -33,10 +55,6 @@ def _to_user_config(config: list[dict[str, Any]]) -> dict[str, Any]:
             "sensitive": bool(c.get("sensitive", False)),
         }
     return out
-
-
-def _retarget(value: str) -> str:
-    return value.replace(_SPEC_ROOT, _CLAUDE_ROOT)
 
 
 def _to_claude_server(server: dict[str, Any]) -> dict[str, Any]:
@@ -55,25 +73,5 @@ def _to_claude_server(server: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
-def emit_claude(plugin_model: Model) -> list[base.EmittedFile]:
-    plugin = plugin_model.plugin
-    google = plugin_model.google
-
-    out: dict[str, Any] = {"name": plugin["name"]}
-    copy_present(
-        out,
-        plugin,
-        ["version", "description", "author", "homepage", "license", "repository"],
-    )
-    if plugin_model.has_skills:
-        out["skills"] = "./skills/"
-
-    config = google.get("config", [])
-    if config:
-        out["userConfig"] = _to_user_config(config)
-
-    servers = (plugin_model.mcp or {}).get("mcpServers") or {}
-    if servers:
-        out["mcpServers"] = {name: _to_claude_server(s) for name, s in servers.items()}
-
-    return [base.EmittedFile(".claude-plugin/plugin.json", serialize(out))]
+def _retarget(value: str) -> str:
+    return value.replace(_SPEC_ROOT, _CLAUDE_ROOT)

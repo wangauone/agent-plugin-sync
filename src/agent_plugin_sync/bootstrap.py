@@ -28,42 +28,6 @@ class BootstrapResult:
     mcp: dict[str, Any] | None
 
 
-def _to_spec_command(command: str) -> str:
-    """``${extensionPath}${/}toolbox`` -> ``./toolbox`` for the spec mcp.json."""
-    stripped = re.sub(r"^\$\{extensionPath\}\$\{/\}", "", command)
-    return command if stripped == command else f"./{stripped}"
-
-
-def _git_repo_url(root: pathlib.Path) -> str | None:
-    try:
-        url = subprocess.run(
-            ["git", "-C", str(root), "remote", "get-url", "origin"],
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return None
-    # Normalize git@github.com:owner/repo.git -> https URL.
-    ssh = re.match(r"^git@([^:]+):(.+?)(?:\.git)?$", url)
-    if ssh:
-        return f"https://{ssh.group(1)}/{ssh.group(2)}"
-    return re.sub(r"\.git$", "", url)
-
-
-def _to_config_var(setting: dict[str, Any]) -> dict[str, Any]:
-    key = setting["envVar"]
-    var: dict[str, Any] = {
-        "key": key,
-        "title": setting.get("name", key),
-        "description": setting.get("description", ""),
-    }
-    # Best-effort inference; the human refines these after bootstrap.
-    if re.search(r"password|secret|token", key, re.IGNORECASE):
-        var["sensitive"] = True
-    return var
-
-
 def bootstrap(root: pathlib.Path) -> BootstrapResult:
     gemini_path = root / "gemini-extension.json"
     if not gemini_path.exists():
@@ -123,3 +87,39 @@ def bootstrap(root: pathlib.Path) -> BootstrapResult:
         mcp = {"$schema": SPEC_MCP_SCHEMA, "mcpServers": mcp_servers}
 
     return BootstrapResult(plugin=plugin, mcp=mcp)
+
+
+def _to_config_var(setting: dict[str, Any]) -> dict[str, Any]:
+    key = setting["envVar"]
+    var: dict[str, Any] = {
+        "key": key,
+        "title": setting.get("name", key),
+        "description": setting.get("description", ""),
+    }
+    # Best-effort inference; the human refines these after bootstrap.
+    if re.search(r"password|secret|token", key, re.IGNORECASE):
+        var["sensitive"] = True
+    return var
+
+
+def _git_repo_url(root: pathlib.Path) -> str | None:
+    try:
+        url = subprocess.run(
+            ["git", "-C", str(root), "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+    # Normalize git@github.com:owner/repo.git -> https URL.
+    ssh = re.match(r"^git@([^:]+):(.+?)(?:\.git)?$", url)
+    if ssh:
+        return f"https://{ssh.group(1)}/{ssh.group(2)}"
+    return re.sub(r"\.git$", "", url)
+
+
+def _to_spec_command(command: str) -> str:
+    """``${extensionPath}${/}toolbox`` -> ``./toolbox`` for the spec mcp.json."""
+    stripped = re.sub(r"^\$\{extensionPath\}\$\{/\}", "", command)
+    return command if stripped == command else f"./{stripped}"

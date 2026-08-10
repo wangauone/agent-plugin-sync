@@ -1,4 +1,4 @@
-"""Emit gemini-extension.json from the model.
+"""Generate gemini-extension.json from the model.
 
 Note the reverse rewrite of the MCP command: the spec mcp.json uses a
 ``./``-relative command anchored by ``cwd: ${PLUGIN_ROOT}``, while Gemini expects
@@ -10,26 +10,10 @@ from __future__ import annotations
 from typing import Any
 
 from agent_plugin_sync import io, model, util
-from agent_plugin_sync.emit import base
+from agent_plugin_sync.generators import artifact
 
 
-def _to_gemini_command(command: str) -> str:
-    """``./toolbox`` -> ``${extensionPath}${/}toolbox``; others pass through."""
-    if command.startswith("./"):
-        return "${extensionPath}${/}" + command[2:]
-    return command
-
-
-def _to_gemini_server(server: dict[str, Any]) -> dict[str, Any]:
-    out: dict[str, Any] = {"command": _to_gemini_command(server["command"])}
-    if "args" in server:
-        out["args"] = server["args"]
-    if "env" in server:
-        out["env"] = server["env"]
-    return out
-
-
-def emit_gemini(plugin_model: model.Model) -> list[base.EmittedFile]:
+def generate_gemini(plugin_model: model.Model) -> list[artifact.GeneratedFile]:
     plugin = plugin_model.plugin
     mcp = plugin_model.mcp or {}
     google = plugin_model.google
@@ -60,4 +44,20 @@ def emit_gemini(plugin_model: model.Model) -> list[base.EmittedFile]:
     if settings:
         out["settings"] = settings
 
-    return [base.EmittedFile("gemini-extension.json", io.serialize(out))]
+    return [artifact.GeneratedFile("gemini-extension.json", io.serialize(out))]
+
+
+def _to_gemini_server(server: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {"command": _to_gemini_command(server["command"])}
+    if "args" in server:
+        out["args"] = server["args"]
+    if "env" in server:
+        out["env"] = server["env"]
+    return out
+
+
+def _to_gemini_command(command: str) -> str:
+    """``./toolbox`` -> ``${extensionPath}${/}toolbox``; others pass through."""
+    if command.startswith("./"):
+        return "${extensionPath}${/}" + command[2:]
+    return command

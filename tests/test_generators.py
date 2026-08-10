@@ -1,14 +1,13 @@
-"""Emitter behavior: turning the canonical model into per-harness files."""
+"""Generator behavior: turning the canonical model into per-harness files."""
 
 from __future__ import annotations
 
 from agent_plugin_sync import model
-from agent_plugin_sync.emit import claude as claude_emit
-from agent_plugin_sync.emit import gemini as gemini_emit
-from tests.helpers import emitted_paths, generated_json
+from agent_plugin_sync.generators import claude, gemini
+from tests.helpers import generated_json, generated_paths
 
 
-class TestGeminiEmitter:
+class TestGeminiGenerator:
     def test_rewrites_relative_command_to_gemini_placeholder(self, make_plugin, tmp_path):
         """Gemini uses its own ${extensionPath} placeholder, not the spec's ./ command."""
         # Arrange
@@ -18,11 +17,10 @@ class TestGeminiEmitter:
         )
 
         # Act
-        manifest = generated_json(gemini_emit.emit_gemini(model.load_model(root)), "gemini-extension.json")
+        manifest = generated_json(gemini.generate_gemini(model.load_model(root)), "gemini-extension.json")
 
         # Assert
-        server = manifest["mcpServers"]["demo"]
-        assert server["command"] == "${extensionPath}${/}toolbox"
+        assert manifest["mcpServers"]["demo"]["command"] == "${extensionPath}${/}toolbox"
 
     def test_drops_spec_only_server_keys(self, make_plugin, tmp_path):
         """`type` and `cwd` are spec-only and must not leak into the Gemini manifest."""
@@ -33,7 +31,7 @@ class TestGeminiEmitter:
         )
 
         # Act
-        manifest = generated_json(gemini_emit.emit_gemini(model.load_model(root)), "gemini-extension.json")
+        manifest = generated_json(gemini.generate_gemini(model.load_model(root)), "gemini-extension.json")
 
         # Assert
         server = manifest["mcpServers"]["demo"]
@@ -49,7 +47,7 @@ class TestGeminiEmitter:
         )
 
         # Act
-        manifest = generated_json(gemini_emit.emit_gemini(model.load_model(root)), "gemini-extension.json")
+        manifest = generated_json(gemini.generate_gemini(model.load_model(root)), "gemini-extension.json")
 
         # Assert
         assert manifest["settings"] == [
@@ -66,13 +64,13 @@ class TestGeminiEmitter:
         )
 
         # Act
-        manifest = generated_json(gemini_emit.emit_gemini(model.load_model(root)), "gemini-extension.json")
+        manifest = generated_json(gemini.generate_gemini(model.load_model(root)), "gemini-extension.json")
 
         # Assert
         assert set(manifest["mcpServers"]) == {"renamed"}
 
 
-class TestClaudeEmitter:
+class TestClaudeGenerator:
     def test_inlines_mcp_and_emits_no_separate_mcp_file(self, make_plugin, tmp_path):
         """Claude carries MCP inline in the manifest; no root .mcp.json is produced."""
         # Arrange
@@ -82,10 +80,10 @@ class TestClaudeEmitter:
         )
 
         # Act
-        files = claude_emit.emit_claude(model.load_model(root))
+        files = claude.generate_claude(model.load_model(root))
 
         # Assert
-        assert emitted_paths(files) == {".claude-plugin/plugin.json"}
+        assert generated_paths(files) == {".claude-plugin/plugin.json"}
         manifest = generated_json(files, ".claude-plugin/plugin.json")
         assert manifest["mcpServers"]["demo"]["command"] == "npx"
 
@@ -99,7 +97,7 @@ class TestClaudeEmitter:
 
         # Act
         manifest = generated_json(
-            claude_emit.emit_claude(model.load_model(root)), ".claude-plugin/plugin.json"
+            claude.generate_claude(model.load_model(root)), ".claude-plugin/plugin.json"
         )
 
         # Assert
@@ -115,7 +113,7 @@ class TestClaudeEmitter:
 
         # Act
         manifest = generated_json(
-            claude_emit.emit_claude(model.load_model(root)), ".claude-plugin/plugin.json"
+            claude.generate_claude(model.load_model(root)), ".claude-plugin/plugin.json"
         )
 
         # Assert
@@ -133,7 +131,7 @@ class TestClaudeEmitter:
 
         # Act
         manifest = generated_json(
-            claude_emit.emit_claude(model.load_model(root)), ".claude-plugin/plugin.json"
+            claude.generate_claude(model.load_model(root)), ".claude-plugin/plugin.json"
         )
 
         # Assert
@@ -146,7 +144,7 @@ class TestClaudeEmitter:
 
         # Act
         manifest = generated_json(
-            claude_emit.emit_claude(model.load_model(root)), ".claude-plugin/plugin.json"
+            claude.generate_claude(model.load_model(root)), ".claude-plugin/plugin.json"
         )
 
         # Assert
