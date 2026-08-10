@@ -1,0 +1,125 @@
+"""One-time seeding: read an existing gemini-extension.json and produce the
+Agent Plugin spec source files (plugin.json + mcp.json).
+
+This is scaffolding, NOT part of the ongoing pipeline. After bootstrapping,
+plugin.json becomes the source of truth and gemini-extension.json is a generated
+output. The seeded plugin.json is a starting point — a human should review
+fields bootstrap cannot infer (required, default, homepage, keywords).
+"""
+
+from __future__ import annotations
+
+import dataclasses
+import pathlib
+import re
+import subprocess
+from typing import Any
+
+import agent_plugin_sync
+from agent_plugin_sync import io
+
+SPEC_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
+SPEC_MCP_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
+
+
+@dataclasses.dataclass
+class BootstrapResult:
+    plugin: dict[str, Any]
+    mcp: dict[str, Any] | None
+
+
+def _to_spec_command(command: str) -> str:
+    """``${extensionPath}${/}toolbox`` -> ``./toolbox`` for the spec mcp.json."""
+    stripped = re.sub(r"^\$\{extensionPath\}\$\{/\}", "", command)
+    return command if stripped == command else f"./{stripped}"
+
+
+def _git_repo_url(root: pathlib.Path) -> str | None:
+    try:
+        url = subprocess.run(
+            ["git", "-C", str(root), "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+    # Normalize git@github.com:owner/repo.git -> https URL.
+    ssh = re.match(r"^git@([^:]+):(.+?)(?:\.git)?$", url)
+    if ssh:
+        return f"https://{ssh.group(1)}/{ssh.group(2)}"
+    return re.sub(r"\.git$", "", url)
+
+
+def _to_config_var(setting: dict[str, Any]) -> dict[str, Any]:
+    key = setting["envVar"]
+    var: dict[str, Any] = {
+        "key": key,
+        "title": setting.get("name", key),
+        "description": setting.get("description", ""),
+    }
+    # Best-effort inference; the human refines these after bootstrap.
+    if re.search(r"password|secret|token", key, re.IGNORECASE):
+        var["sensitive"] = True
+    return var
+
+
+def bootstrap(root: pathlib.Path) -> BootstrapResult:
+    gemini_path = root / "gemini-extension.json"
+    if not gemini_path.exists():
+        raise FileNotFoundError(
+            f"No gemini-extension.json to bootstrap from at {gemini_path}"
+        )
+    gem = io.read_json(gemini_path)
+
+    # --- Build the com.google.cloud extension bucket ---
+    google: dict[str, Any] = {}
+    settings = gem.get("settings") or []
+    if settings:
+        google["config"] = [_to_config_var(s) for s in settings]
+
+    gemini_bits: dict[str, Any] = {}
+    if gem.get("contextFileName"):
+        gemini_bits["contextFileName"] = gem["contextFileName"]
+    servers = gem.get("mcpServers") or {}
+    first_server = next(iter(servers), None)
+    if first_server:
+        gemini_bits["mcpServerName"] = first_server
+    if gemini_bits:
+        google["gemini"] = gemini_bits
+
+    # --- plugin.json ---
+    plugin: dict[str, Any] = {"$schema": SPEC_PLUGIN_SCHEMA, "name": gem["name"]}
+    if gem.get("version"):
+        plugin["version"] = gem["version"]
+    if gem.get("description"):
+        plugin["description"] = gem["description"]
+    plugin["author"] = {
+        "name": "Google LLC",
+        "email": "data-cloud-ai-integrations@google.com",
+    }
+    repo = _git_repo_url(root)
+    if repo:
+        plugin["repository"] = repo
+    if (root / "LICENSE").exists():
+        plugin["license"] = "Apache-2.0"
+    plugin["extensions"] = {agent_plugin_sync.GOOGLE_NS: google}
+
+    # --- mcp.json (only if the gemini extension declared MCP servers) ---
+    mcp: dict[str, Any] | None = None
+    if servers:
+        mcp_servers: dict[str, Any] = {}
+        for name, server in servers.items():
+            entry: dict[str, Any] = {
+                "type": "stdio",
+                "command": _to_spec_command(server["command"]),
+            }
+            if server.get("args"):
+                entry["args"] = server["args"]
+            if server.get("env"):
+                entry["env"] = server["env"]
+            entry["cwd"] = "${PLUGIN_ROOT}"
+            mcp_servers[name] = entry
+        mcp = {"$schema": SPEC_MCP_SCHEMA, "mcpServers": mcp_servers}
+
+    return BootstrapResult(plugin=plugin, mcp=mcp)
