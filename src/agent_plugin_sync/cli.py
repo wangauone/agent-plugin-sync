@@ -16,7 +16,7 @@ import argparse
 import pathlib
 import sys
 
-from agent_plugin_sync import bootstrap, generators, io, model, validate
+from agent_plugin_sync import bootstrap, generators, io, loader, validate
 from agent_plugin_sync.generators import artifact
 
 
@@ -109,7 +109,7 @@ def cmd_validate(root: pathlib.Path) -> None:
 
 
 def _resolve_roots(root: pathlib.Path, marker: str) -> list[pathlib.Path]:
-    roots = model.discover_roots(root, marker)
+    roots = loader.discover_roots(root, marker)
     if not roots:
         _fail(f"no {marker} found at or under {root}")
     return roots
@@ -122,7 +122,7 @@ def _build_outputs(plugin_root: pathlib.Path) -> list[artifact.GeneratedFile]:
         for e in result.errors:
             print(f"  - {e}", file=sys.stderr)
         _fail(f"{plugin_root}: source failed validation; fix plugin.json and retry")
-    return generators.generate_all(model.load_model(plugin_root))
+    return generators.generate_all(loader.load_model(plugin_root))
 
 
 def _label(root: pathlib.Path, plugin_root: pathlib.Path) -> str:

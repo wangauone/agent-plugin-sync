@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from agent_plugin_sync import model
+from agent_plugin_sync import loader
 from agent_plugin_sync.generators import claude, gemini
 from tests.helpers import generated_json, generated_paths
 
@@ -17,7 +17,7 @@ class TestGeminiGenerator:
         )
 
         # Act
-        manifest = generated_json(gemini.generate_gemini(model.load_model(root)), "gemini-extension.json")
+        manifest = generated_json(gemini.generate_gemini(loader.load_model(root)), "gemini-extension.json")
 
         # Assert
         assert manifest["mcpServers"]["demo"]["command"] == "${extensionPath}${/}toolbox"
@@ -31,7 +31,7 @@ class TestGeminiGenerator:
         )
 
         # Act
-        manifest = generated_json(gemini.generate_gemini(model.load_model(root)), "gemini-extension.json")
+        manifest = generated_json(gemini.generate_gemini(loader.load_model(root)), "gemini-extension.json")
 
         # Assert
         server = manifest["mcpServers"]["demo"]
@@ -47,7 +47,7 @@ class TestGeminiGenerator:
         )
 
         # Act
-        manifest = generated_json(gemini.generate_gemini(model.load_model(root)), "gemini-extension.json")
+        manifest = generated_json(gemini.generate_gemini(loader.load_model(root)), "gemini-extension.json")
 
         # Assert
         assert manifest["settings"] == [
@@ -64,7 +64,7 @@ class TestGeminiGenerator:
         )
 
         # Act
-        manifest = generated_json(gemini.generate_gemini(model.load_model(root)), "gemini-extension.json")
+        manifest = generated_json(gemini.generate_gemini(loader.load_model(root)), "gemini-extension.json")
 
         # Assert
         assert set(manifest["mcpServers"]) == {"renamed"}
@@ -80,7 +80,7 @@ class TestClaudeGenerator:
         )
 
         # Act
-        files = claude.generate_claude(model.load_model(root))
+        files = claude.generate_claude(loader.load_model(root))
 
         # Assert
         assert generated_paths(files) == {".claude-plugin/plugin.json"}
@@ -97,7 +97,7 @@ class TestClaudeGenerator:
 
         # Act
         manifest = generated_json(
-            claude.generate_claude(model.load_model(root)), ".claude-plugin/plugin.json"
+            claude.generate_claude(loader.load_model(root)), ".claude-plugin/plugin.json"
         )
 
         # Assert
@@ -113,7 +113,7 @@ class TestClaudeGenerator:
 
         # Act
         manifest = generated_json(
-            claude.generate_claude(model.load_model(root)), ".claude-plugin/plugin.json"
+            claude.generate_claude(loader.load_model(root)), ".claude-plugin/plugin.json"
         )
 
         # Assert
@@ -131,7 +131,7 @@ class TestClaudeGenerator:
 
         # Act
         manifest = generated_json(
-            claude.generate_claude(model.load_model(root)), ".claude-plugin/plugin.json"
+            claude.generate_claude(loader.load_model(root)), ".claude-plugin/plugin.json"
         )
 
         # Assert
@@ -144,7 +144,7 @@ class TestClaudeGenerator:
 
         # Act
         manifest = generated_json(
-            claude.generate_claude(model.load_model(root)), ".claude-plugin/plugin.json"
+            claude.generate_claude(loader.load_model(root)), ".claude-plugin/plugin.json"
         )
 
         # Assert

@@ -7,7 +7,7 @@ Gemini output via `agy plugin import gemini`. Neither needs a generated vendor f
 
 from __future__ import annotations
 
-from agent_plugin_sync import model
+from agent_plugin_sync import loader
 from agent_plugin_sync.generators import artifact, claude, gemini
 
 GENERATORS = {
@@ -16,7 +16,7 @@ GENERATORS = {
 }
 
 
-def generate_all(plugin_model: model.Model) -> list[artifact.GeneratedFile]:
+def generate_all(plugin_model: loader.Model) -> list[artifact.GeneratedFile]:
     """Run every generator and return the combined file list."""
     files: list[artifact.GeneratedFile] = []
     for generate in GENERATORS.values():

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from agent_plugin_sync import io, model, models
+from agent_plugin_sync import io, loader, models
 from agent_plugin_sync.generators import artifact
 
 # Claude exposes the plugin's install dir as ${CLAUDE_PLUGIN_ROOT}; the spec uses
@@ -23,7 +23,7 @@ _CLAUDE_ROOT = "${CLAUDE_PLUGIN_ROOT}"
 _PASSTHROUGH = {"version", "description", "author", "homepage", "license", "repository"}
 
 
-def generate_claude(plugin_model: model.Model) -> list[artifact.GeneratedFile]:
+def generate_claude(plugin_model: loader.Model) -> list[artifact.GeneratedFile]:
     plugin = plugin_model.plugin
 
     out: dict[str, Any] = {"name": plugin.name}

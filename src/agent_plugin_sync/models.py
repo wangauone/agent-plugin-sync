@@ -11,6 +11,9 @@ Python attributes are snake_case; JSON keys are camelCase, bridged by an alias
 generator. Our own bucket (GoogleCloudExtension and friends) forbids unknown
 fields so typos are caught; the spec-owned Plugin/Mcp/McpServer tolerate fields
 we don't model.
+
+Models are ordered top-down (entry model, then the models it references). The
+trailing ``model_rebuild()`` calls resolve the resulting forward references.
 """
 
 from __future__ import annotations
@@ -24,40 +27,6 @@ import agent_plugin_sync
 
 _STRICT = pydantic.ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="forbid")
 _LENIENT = pydantic.ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="ignore")
-
-
-class ConfigVar(pydantic.BaseModel):
-    model_config = _STRICT
-
-    key: str = pydantic.Field(pattern=r"^[A-Z][A-Z0-9_]*$")
-    title: str
-    description: str
-    required: bool | None = None
-    default: str | None = None
-    sensitive: bool | None = None
-
-
-class GeminiConfig(pydantic.BaseModel):
-    model_config = _STRICT
-
-    context_file_name: str | None = None
-    mcp_server_name: str | None = None
-
-
-class GoogleCloudExtension(pydantic.BaseModel):
-    model_config = _STRICT
-
-    comment: str | None = None
-    config: list[ConfigVar] = pydantic.Field(default_factory=list)
-    gemini: GeminiConfig | None = None
-
-
-class Author(pydantic.BaseModel):
-    model_config = _LENIENT
-
-    name: str
-    email: str | None = None
-    url: str | None = None
 
 
 class Plugin(pydantic.BaseModel):
@@ -79,6 +48,46 @@ class Plugin(pydantic.BaseModel):
         return GoogleCloudExtension.model_validate(self.extensions.get(agent_plugin_sync.GOOGLE_NS, {}))
 
 
+class Author(pydantic.BaseModel):
+    model_config = _LENIENT
+
+    name: str
+    email: str | None = None
+    url: str | None = None
+
+
+class GoogleCloudExtension(pydantic.BaseModel):
+    model_config = _STRICT
+
+    comment: str | None = None
+    config: list[ConfigVar] = pydantic.Field(default_factory=list)
+    gemini: GeminiConfig | None = None
+
+
+class ConfigVar(pydantic.BaseModel):
+    model_config = _STRICT
+
+    key: str = pydantic.Field(pattern=r"^[A-Z][A-Z0-9_]*$")
+    title: str
+    description: str
+    required: bool | None = None
+    default: str | None = None
+    sensitive: bool | None = None
+
+
+class GeminiConfig(pydantic.BaseModel):
+    model_config = _STRICT
+
+    context_file_name: str | None = None
+    mcp_server_name: str | None = None
+
+
+class Mcp(pydantic.BaseModel):
+    model_config = _LENIENT
+
+    mcp_servers: dict[str, McpServer] = pydantic.Field(default_factory=dict)
+
+
 class McpServer(pydantic.BaseModel):
     model_config = _LENIENT
 
@@ -89,7 +98,6 @@ class McpServer(pydantic.BaseModel):
     cwd: str | None = None
 
 
-class Mcp(pydantic.BaseModel):
-    model_config = _LENIENT
-
-    mcp_servers: dict[str, McpServer] = pydantic.Field(default_factory=dict)
+Plugin.model_rebuild()
+GoogleCloudExtension.model_rebuild()
+Mcp.model_rebuild()

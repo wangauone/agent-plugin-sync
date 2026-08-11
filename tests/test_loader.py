@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from agent_plugin_sync import model
+from agent_plugin_sync import loader
 
 
 class TestDiscoverRoots:
@@ -12,7 +12,7 @@ class TestDiscoverRoots:
         make_plugin(tmp_path)
 
         # Act
-        roots = model.discover_roots(tmp_path)
+        roots = loader.discover_roots(tmp_path)
 
         # Assert
         assert roots == [tmp_path]
@@ -24,7 +24,7 @@ class TestDiscoverRoots:
         make_plugin(tmp_path / "plugins" / "b", name="b")
 
         # Act
-        roots = model.discover_roots(tmp_path)
+        roots = loader.discover_roots(tmp_path)
 
         # Assert
         assert sorted(root.name for root in roots) == ["a", "b"]
@@ -38,7 +38,7 @@ class TestDiscoverRoots:
         generated.write_text("{}", encoding="utf-8")
 
         # Act
-        roots = model.discover_roots(tmp_path)
+        roots = loader.discover_roots(tmp_path)
 
         # Assert
         assert roots == [plugin_root]
@@ -56,7 +56,7 @@ class TestLoadModel:
         )
 
         # Act
-        loaded = model.load_model(root)
+        loaded = loader.load_model(root)
 
         # Assert
         assert loaded.plugin.name == "demo"
@@ -70,7 +70,7 @@ class TestLoadModel:
         root = make_plugin(tmp_path)
 
         # Act
-        loaded = model.load_model(root)
+        loaded = loader.load_model(root)
 
         # Assert
         assert loaded.mcp is None

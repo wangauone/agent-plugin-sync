@@ -9,11 +9,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from agent_plugin_sync import io, model, models
+from agent_plugin_sync import io, loader, models
 from agent_plugin_sync.generators import artifact
 
 
-def generate_gemini(plugin_model: model.Model) -> list[artifact.GeneratedFile]:
+def generate_gemini(plugin_model: loader.Model) -> list[artifact.GeneratedFile]:
     plugin = plugin_model.plugin
     google = plugin.google
     gemini = google.gemini
