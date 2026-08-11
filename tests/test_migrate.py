@@ -1,10 +1,10 @@
-"""Bootstrapping spec source files from an existing gemini-extension.json."""
+"""Migrating spec source files from an existing gemini-extension.json."""
 
 from __future__ import annotations
 
 import json
 
-from agent_plugin_sync import bootstrap
+from agent_plugin_sync import migrate
 
 _GEMINI_EXTENSION = {
     "name": "demo",
@@ -27,14 +27,14 @@ def _seed_gemini_extension(root, *, with_license=True):
         (root / "LICENSE").write_text("Apache-2.0", encoding="utf-8")
 
 
-class TestBootstrap:
+class TestMigrate:
     def test_carries_identity_and_context_into_the_spec_manifest(self, tmp_path):
         """Name/version/description and the Gemini context file transfer to plugin.json."""
         # Arrange
         _seed_gemini_extension(tmp_path)
 
         # Act
-        result = bootstrap.bootstrap(tmp_path)
+        result = migrate.migrate(tmp_path)
 
         # Assert
         google = result.plugin["extensions"]["com.google.cloud"]
@@ -48,7 +48,7 @@ class TestBootstrap:
         _seed_gemini_extension(tmp_path)
 
         # Act
-        config = bootstrap.bootstrap(tmp_path).plugin["extensions"]["com.google.cloud"]["config"]
+        config = migrate.migrate(tmp_path).plugin["extensions"]["com.google.cloud"]["config"]
 
         # Assert
         by_key = {var["key"]: var for var in config}
@@ -61,7 +61,7 @@ class TestBootstrap:
         _seed_gemini_extension(tmp_path)
 
         # Act
-        server = bootstrap.bootstrap(tmp_path).mcp["mcpServers"]["demo"]
+        server = migrate.migrate(tmp_path).mcp["mcpServers"]["demo"]
 
         # Assert
         assert server["command"] == "./toolbox"
@@ -74,7 +74,7 @@ class TestBootstrap:
         _seed_gemini_extension(tmp_path, with_license=False)
 
         # Act
-        plugin = bootstrap.bootstrap(tmp_path).plugin
+        plugin = migrate.migrate(tmp_path).plugin
 
         # Assert
         assert "license" not in plugin

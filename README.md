@@ -73,7 +73,7 @@ One-time onboarding utility:
 
 ```bash
 # seed plugin.json + mcp.json from an existing gemini-extension.json
-agent-plugin-sync bootstrap ./path/to/plugin-repo
+agent-plugin-sync migrate ./path/to/plugin-repo
 ```
 
 `[root]` defaults to the current directory.

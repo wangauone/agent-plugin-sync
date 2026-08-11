@@ -1,10 +1,10 @@
 """One-time seeding: read an existing gemini-extension.json and produce the
 Agent Plugin spec source files (plugin.json + mcp.json).
 
-This is scaffolding, NOT part of the ongoing pipeline. After bootstrapping,
+This is scaffolding, NOT part of the ongoing pipeline. After migrating,
 plugin.json becomes the source of truth and gemini-extension.json is a generated
 output. The seeded plugin.json is a starting point — a human should review
-fields bootstrap cannot infer (required, default, homepage, keywords).
+fields migrate cannot infer (required, default, homepage, keywords).
 """
 
 from __future__ import annotations
@@ -23,20 +23,20 @@ SPEC_MCP_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
 
 
 @dataclasses.dataclass
-class BootstrapResult:
+class MigrateResult:
     """The seeded source files: plugin.json contents, and mcp.json if any."""
 
     plugin: dict[str, Any]
     mcp: dict[str, Any] | None
 
 
-def bootstrap(root: pathlib.Path) -> BootstrapResult:
+def migrate(root: pathlib.Path) -> MigrateResult:
     """Seed Agent Plugin spec source (plugin.json + mcp.json) from an existing
     gemini-extension.json. One-time scaffolding; review inferred fields after."""
     gemini_path = root / "gemini-extension.json"
     if not gemini_path.exists():
         raise FileNotFoundError(
-            f"No gemini-extension.json to bootstrap from at {gemini_path}"
+            f"No gemini-extension.json to migrate from at {gemini_path}"
         )
     gem = io.read_json(gemini_path)
 
@@ -90,7 +90,7 @@ def bootstrap(root: pathlib.Path) -> BootstrapResult:
             mcp_servers[name] = entry
         mcp = {"$schema": SPEC_MCP_SCHEMA, "mcpServers": mcp_servers}
 
-    return BootstrapResult(plugin=plugin, mcp=mcp)
+    return MigrateResult(plugin=plugin, mcp=mcp)
 
 
 def _to_config_var(setting: dict[str, Any]) -> dict[str, Any]:
@@ -100,7 +100,7 @@ def _to_config_var(setting: dict[str, Any]) -> dict[str, Any]:
         "title": setting.get("name", key),
         "description": setting.get("description", ""),
     }
-    # Best-effort inference; the human refines these after bootstrap.
+    # Best-effort inference; the human refines these after migrate.
     if re.search(r"password|secret|token", key, re.IGNORECASE):
         var["sensitive"] = True
     return var

@@ -8,7 +8,7 @@ Two core commands:
 
 One-time onboarding utility:
 
-    agent-plugin-sync bootstrap [root] [--force]   Seed plugin.json + mcp.json from gemini-extension.json
+    agent-plugin-sync migrate [root] [--force]   Seed plugin.json + mcp.json from gemini-extension.json
 
 [root] defaults to the current directory. It may be a single plugin (contains
 plugin.json) or a monorepo (plugin.json in subdirectories); every plugin found is
@@ -21,7 +21,7 @@ import argparse
 import pathlib
 import sys
 
-from agent_plugin_sync import bootstrap, generators, io, loader, validate
+from agent_plugin_sync import generators, io, loader, migrate, validate
 from agent_plugin_sync.generators import artifact
 
 
@@ -29,10 +29,10 @@ def main(argv: list[str] | None = None) -> None:
     """Parse arguments and dispatch to the selected command."""
     parser = argparse.ArgumentParser(prog="agent-plugin-sync")
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("generate", "validate", "bootstrap"):
+    for name in ("generate", "validate", "migrate"):
         p = sub.add_parser(name)
         p.add_argument("root", nargs="?", default=".", help="plugin root or monorepo (default: .)")
-        if name == "bootstrap":
+        if name == "migrate":
             p.add_argument("--force", action="store_true", help="overwrite existing plugin.json")
 
     args = parser.parse_args(argv)
@@ -42,8 +42,8 @@ def main(argv: list[str] | None = None) -> None:
         cmd_generate(root)
     elif args.command == "validate":
         cmd_validate(root)
-    elif args.command == "bootstrap":
-        cmd_bootstrap(root, args.force)
+    elif args.command == "migrate":
+        cmd_migrate(root, args.force)
 
 
 def cmd_generate(root: pathlib.Path) -> None:
@@ -83,7 +83,7 @@ def cmd_validate(root: pathlib.Path) -> None:
         _fail("run `agent-plugin-sync generate` and commit, then re-validate")
 
 
-def cmd_bootstrap(root: pathlib.Path, force: bool) -> None:
+def cmd_migrate(root: pathlib.Path, force: bool) -> None:
     """Seed plugin.json + mcp.json from gemini-extension.json for each plugin found."""
     roots = _resolve_roots(root, "gemini-extension.json")
     multi = len(roots) > 1
@@ -94,7 +94,7 @@ def cmd_bootstrap(root: pathlib.Path, force: bool) -> None:
         if plugin_path.exists() and not force:
             print(f"↷ skip {plugin_path} (exists; use --force to overwrite)")
             continue
-        result = bootstrap.bootstrap(plugin_root)
+        result = migrate.migrate(plugin_root)
         io.write_json(plugin_path, result.plugin)
         print(f"✔ wrote {plugin_path}")
         if result.mcp is not None:
