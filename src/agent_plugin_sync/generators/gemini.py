@@ -15,7 +15,7 @@ from agent_plugin_sync.generators import artifact
 
 def generate_gemini(plugin_model: loader.Model) -> list[artifact.GeneratedFile]:
     plugin = plugin_model.plugin
-    google = plugin.google
+    google = models.google_extension(plugin)
     gemini = google.gemini
 
     out: dict[str, Any] = {"name": plugin.name}

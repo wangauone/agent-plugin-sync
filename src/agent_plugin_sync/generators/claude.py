@@ -31,7 +31,7 @@ def generate_claude(plugin_model: loader.Model) -> list[artifact.GeneratedFile]:
     if plugin_model.has_skills:
         out["skills"] = "./skills/"
 
-    config = plugin.google.config
+    config = models.google_extension(plugin).config
     if config:
         out["userConfig"] = {c.key.lower(): _to_user_config(c) for c in config}
 

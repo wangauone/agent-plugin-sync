@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from agent_plugin_sync import loader
+from agent_plugin_sync import loader, models
 
 
 class TestDiscoverRoots:
@@ -61,7 +61,7 @@ class TestLoadModel:
         # Assert
         assert loaded.plugin.name == "demo"
         assert loaded.mcp.mcp_servers["demo"].command == "npx"
-        assert loaded.plugin.google.config[0].key == "DEMO_HOST"
+        assert models.google_extension(loaded.plugin).config[0].key == "DEMO_HOST"
         assert loaded.has_skills is True
 
     def test_mcp_is_none_when_absent(self, make_plugin, tmp_path):
