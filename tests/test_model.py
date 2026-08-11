@@ -59,9 +59,9 @@ class TestLoadModel:
         loaded = model.load_model(root)
 
         # Assert
-        assert loaded.plugin["name"] == "demo"
-        assert loaded.mcp["mcpServers"]["demo"]["command"] == "npx"
-        assert loaded.google["config"][0]["key"] == "DEMO_HOST"
+        assert loaded.plugin.name == "demo"
+        assert loaded.mcp.mcp_servers["demo"].command == "npx"
+        assert loaded.plugin.google.config[0].key == "DEMO_HOST"
         assert loaded.has_skills is True
 
     def test_mcp_is_none_when_absent(self, make_plugin, tmp_path):

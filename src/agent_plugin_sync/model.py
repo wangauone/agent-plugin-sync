@@ -1,6 +1,6 @@
-"""Load the source files from a plugin root and build the canonical model.
+"""Discover plugin roots and load their source files into typed models.
 
-This is the one place that reads disk, so the emitters stay pure functions of
+This is the one place that reads disk, so the generators stay pure functions of
 the model.
 """
 
@@ -8,20 +8,17 @@ from __future__ import annotations
 
 import dataclasses
 import pathlib
-from typing import Any
 
-import agent_plugin_sync
-from agent_plugin_sync import io
+from agent_plugin_sync import io, models
 
 
 @dataclasses.dataclass
 class Model:
-    """What the emitters read. `plugin`, `mcp`, and `google` are parsed JSON."""
+    """What the generators read: the parsed source of one plugin."""
 
     root: pathlib.Path
-    plugin: dict[str, Any]
-    mcp: dict[str, Any] | None
-    google: dict[str, Any] = dataclasses.field(default_factory=dict)
+    plugin: models.Plugin
+    mcp: models.Mcp | None
     has_skills: bool = False
 
 
@@ -32,8 +29,8 @@ def discover_roots(root: pathlib.Path, marker: str = "plugin.json") -> list[path
     - Monorepo: no ``marker`` at ``root`` -> every subdirectory that has one.
 
     Paths under a dot-directory (``.git``, ``.venv``, and crucially the generated
-    ``.claude-plugin``/``.codex-plugin`` manifests) are skipped, so only true spec
-    plugin roots are returned. Results are sorted for deterministic ordering.
+    ``.claude-plugin`` manifests) are skipped, so only true spec plugin roots are
+    returned. Results are sorted for deterministic ordering.
     """
     if (root / marker).is_file():
         return [root]
@@ -48,13 +45,15 @@ def discover_roots(root: pathlib.Path, marker: str = "plugin.json") -> list[path
 
 
 def load_model(root: pathlib.Path) -> Model:
+    """Parse a plugin root's source files. Assumes the source is valid (callers
+    validate first); raises pydantic.ValidationError on malformed input."""
     plugin_path = root / "plugin.json"
     if not plugin_path.exists():
         raise FileNotFoundError(f"No plugin.json found at {plugin_path}")
 
-    plugin = io.read_json(plugin_path)
-    mcp = io.read_json_if_exists(root / "mcp.json")
-    google = plugin.get("extensions", {}).get(agent_plugin_sync.GOOGLE_NS, {})
+    plugin = models.Plugin.model_validate(io.read_json(plugin_path))
+    mcp_raw = io.read_json_if_exists(root / "mcp.json")
+    mcp = models.Mcp.model_validate(mcp_raw) if mcp_raw is not None else None
     has_skills = (root / "skills").is_dir()
 
-    return Model(root=root, plugin=plugin, mcp=mcp, google=google, has_skills=has_skills)
+    return Model(root=root, plugin=plugin, mcp=mcp, has_skills=has_skills)

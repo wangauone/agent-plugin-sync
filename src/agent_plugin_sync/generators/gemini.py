@@ -9,37 +9,34 @@ from __future__ import annotations
 
 from typing import Any
 
-from agent_plugin_sync import io, model, util
+from agent_plugin_sync import io, model, models
 from agent_plugin_sync.generators import artifact
 
 
 def generate_gemini(plugin_model: model.Model) -> list[artifact.GeneratedFile]:
     plugin = plugin_model.plugin
-    mcp = plugin_model.mcp or {}
-    google = plugin_model.google
-    gemini_bits = google.get("gemini") or {}
+    google = plugin.google
+    gemini = google.gemini
 
-    out: dict[str, Any] = {"name": plugin["name"]}
-    util.copy_present(out, plugin, ["version", "description"])
+    out: dict[str, Any] = {"name": plugin.name}
+    out.update(plugin.model_dump(include={"version", "description"}, exclude_none=True, by_alias=True))
 
     # mcpServers, with the command rewrite. Honor an explicit gemini.mcpServerName
     # only when there is exactly one server to rename.
-    servers_in = mcp.get("mcpServers") or {}
-    if servers_in:
+    servers = plugin_model.mcp.mcp_servers if plugin_model.mcp else {}
+    if servers:
         rename = None
-        if gemini_bits.get("mcpServerName") and len(servers_in) == 1:
-            rename = gemini_bits["mcpServerName"]
-        servers_out: dict[str, Any] = {}
-        for name, server in servers_in.items():
-            servers_out[rename or name] = _to_gemini_server(server)
-        out["mcpServers"] = servers_out
+        if gemini and gemini.mcp_server_name and len(servers) == 1:
+            rename = gemini.mcp_server_name
+        out["mcpServers"] = {
+            (rename or name): _to_gemini_server(server) for name, server in servers.items()
+        }
 
-    if gemini_bits.get("contextFileName"):
-        out["contextFileName"] = gemini_bits["contextFileName"]
+    if gemini and gemini.context_file_name:
+        out["contextFileName"] = gemini.context_file_name
 
     settings = [
-        {"name": c["title"], "description": c["description"], "envVar": c["key"]}
-        for c in google.get("config", [])
+        {"name": c.title, "description": c.description, "envVar": c.key} for c in google.config
     ]
     if settings:
         out["settings"] = settings
@@ -47,12 +44,12 @@ def generate_gemini(plugin_model: model.Model) -> list[artifact.GeneratedFile]:
     return [artifact.GeneratedFile("gemini-extension.json", io.serialize(out))]
 
 
-def _to_gemini_server(server: dict[str, Any]) -> dict[str, Any]:
-    out: dict[str, Any] = {"command": _to_gemini_command(server["command"])}
-    if "args" in server:
-        out["args"] = server["args"]
-    if "env" in server:
-        out["env"] = server["env"]
+def _to_gemini_server(server: models.McpServer) -> dict[str, Any]:
+    out: dict[str, Any] = {"command": _to_gemini_command(server.command)}
+    if server.args is not None:
+        out["args"] = server.args
+    if server.env is not None:
+        out["env"] = server.env
     return out
 
 

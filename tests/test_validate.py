@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from agent_plugin_sync import model, validate
+from agent_plugin_sync import validate
 
 
-class TestValidateModel:
+class TestValidatePlugin:
     def test_accepts_a_well_formed_source(self, make_plugin, tmp_path):
         """A plugin with valid config and gemini fields passes validation."""
         # Arrange
@@ -16,7 +16,7 @@ class TestValidateModel:
         )
 
         # Act
-        result = validate.validate_model(model.load_model(root))
+        result = validate.validate_plugin(root)
 
         # Assert
         assert result.ok, result.errors
@@ -30,7 +30,7 @@ class TestValidateModel:
         )
 
         # Act
-        result = validate.validate_model(model.load_model(root))
+        result = validate.validate_plugin(root)
 
         # Assert
         assert not result.ok
@@ -41,7 +41,7 @@ class TestValidateModel:
         root = make_plugin(tmp_path, config=[{"key": "DEMO_HOST", "title": "Host"}])
 
         # Act
-        result = validate.validate_model(model.load_model(root))
+        result = validate.validate_plugin(root)
 
         # Assert
         assert not result.ok
@@ -52,7 +52,7 @@ class TestValidateModel:
         root = make_plugin(tmp_path, gemini={"contextFileName": "CTX.md", "bogus": True})
 
         # Act
-        result = validate.validate_model(model.load_model(root))
+        result = validate.validate_plugin(root)
 
         # Assert
         assert not result.ok
@@ -63,7 +63,7 @@ class TestValidateModel:
         root = make_plugin(tmp_path, config=[{"key": "lowercase", "title": "Bad", "description": "d"}])
 
         # Act
-        result = validate.validate_model(model.load_model(root))
+        result = validate.validate_plugin(root)
 
         # Assert
         assert result.errors

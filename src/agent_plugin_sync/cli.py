@@ -96,7 +96,7 @@ def cmd_validate(root: pathlib.Path) -> None:
     multi = len(roots) > 1
     all_ok = True
     for plugin_root in roots:
-        result = validate.validate_model(model.load_model(plugin_root))
+        result = validate.validate_plugin(plugin_root)
         if result.ok:
             print(f"✔ {_label(root, plugin_root)}: valid" if multi else "✔ source is valid")
         else:
@@ -116,14 +116,13 @@ def _resolve_roots(root: pathlib.Path, marker: str) -> list[pathlib.Path]:
 
 
 def _build_outputs(plugin_root: pathlib.Path) -> list[artifact.GeneratedFile]:
-    """Load, validate, and produce the output files for one plugin (in memory)."""
-    plugin_model = model.load_model(plugin_root)
-    result = validate.validate_model(plugin_model)
+    """Validate, then produce the output files for one plugin (in memory)."""
+    result = validate.validate_plugin(plugin_root)
     if not result.ok:
         for e in result.errors:
             print(f"  - {e}", file=sys.stderr)
-        _fail(f"{plugin_root}: source failed schema validation; fix plugin.json and retry")
-    return generators.generate_all(plugin_model)
+        _fail(f"{plugin_root}: source failed validation; fix plugin.json and retry")
+    return generators.generate_all(model.load_model(plugin_root))
 
 
 def _label(root: pathlib.Path, plugin_root: pathlib.Path) -> str:

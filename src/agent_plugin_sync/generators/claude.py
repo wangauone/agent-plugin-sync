@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from agent_plugin_sync import io, model, util
+from agent_plugin_sync import io, model, models
 from agent_plugin_sync.generators import artifact
 
 # Claude exposes the plugin's install dir as ${CLAUDE_PLUGIN_ROOT}; the spec uses
@@ -20,56 +20,49 @@ from agent_plugin_sync.generators import artifact
 _SPEC_ROOT = "${PLUGIN_ROOT}"
 _CLAUDE_ROOT = "${CLAUDE_PLUGIN_ROOT}"
 
+_PASSTHROUGH = {"version", "description", "author", "homepage", "license", "repository"}
+
 
 def generate_claude(plugin_model: model.Model) -> list[artifact.GeneratedFile]:
     plugin = plugin_model.plugin
-    google = plugin_model.google
 
-    out: dict[str, Any] = {"name": plugin["name"]}
-    util.copy_present(
-        out,
-        plugin,
-        ["version", "description", "author", "homepage", "license", "repository"],
-    )
+    out: dict[str, Any] = {"name": plugin.name}
+    out.update(plugin.model_dump(include=_PASSTHROUGH, exclude_none=True, by_alias=True))
     if plugin_model.has_skills:
         out["skills"] = "./skills/"
 
-    config = google.get("config", [])
+    config = plugin.google.config
     if config:
-        out["userConfig"] = _to_user_config(config)
+        out["userConfig"] = {c.key.lower(): _to_user_config(c) for c in config}
 
-    servers = (plugin_model.mcp or {}).get("mcpServers") or {}
+    servers = plugin_model.mcp.mcp_servers if plugin_model.mcp else {}
     if servers:
         out["mcpServers"] = {name: _to_claude_server(s) for name, s in servers.items()}
 
     return [artifact.GeneratedFile(".claude-plugin/plugin.json", io.serialize(out))]
 
 
-def _to_user_config(config: list[dict[str, Any]]) -> dict[str, Any]:
-    out: dict[str, Any] = {}
-    for c in config:
-        out[c["key"].lower()] = {
-            "title": c["title"],
-            "description": c["description"],
-            "type": "string",
-            "sensitive": bool(c.get("sensitive", False)),
-        }
-    return out
+def _to_user_config(var: models.ConfigVar) -> dict[str, Any]:
+    return {
+        "title": var.title,
+        "description": var.description,
+        "type": "string",
+        "sensitive": bool(var.sensitive),
+    }
 
 
-def _to_claude_server(server: dict[str, Any]) -> dict[str, Any]:
-    """Spec mcp.json server -> Claude inline server.
+def _to_claude_server(server: models.McpServer) -> dict[str, Any]:
+    """Spec McpServer -> Claude inline server.
 
-    Drops spec-only keys (`type`, `$schema`) and retargets the plugin-root
-    placeholder in path-bearing fields.
+    Drops the spec-only ``type`` and retargets the plugin-root placeholder.
     """
-    out: dict[str, Any] = {"command": server["command"]}
-    if server.get("args"):
-        out["args"] = [_retarget(a) if isinstance(a, str) else a for a in server["args"]]
-    if server.get("env"):
-        out["env"] = {k: _retarget(v) if isinstance(v, str) else v for k, v in server["env"].items()}
-    if server.get("cwd"):
-        out["cwd"] = _retarget(server["cwd"])
+    out: dict[str, Any] = {"command": server.command}
+    if server.args is not None:
+        out["args"] = [_retarget(a) for a in server.args]
+    if server.env is not None:
+        out["env"] = {k: _retarget(v) for k, v in server.env.items()}
+    if server.cwd is not None:
+        out["cwd"] = _retarget(server.cwd)
     return out
 
 
