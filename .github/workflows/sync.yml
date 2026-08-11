@@ -1,8 +1,8 @@
 # Reusable workflow for plugin repos. By default it only validates (source valid
-# + generated files current). With self_heal=true it also regenerates and commits
+# + generated files current). With auto_sync=true it also regenerates and commits
 # any drift back to the PR branch — handy for Renovate's toolbox bumps.
 #
-# The self-heal commit inherits the PR head commit's author (renovate-bot on
+# The auto-sync commit inherits the PR head commit's author (renovate-bot on
 # Renovate PRs, the human otherwise) so it stays CLA-cleared; the committer is
 # github-actions[bot].
 name: agent-plugin-sync
@@ -14,7 +14,7 @@ on:
         description: Git ref of agent-plugin-sync to run.
         type: string
         default: main
-      self_heal:
+      auto_sync:
         description: Regenerate and commit drift back to the PR branch (same-repo branches only).
         type: boolean
         default: false
@@ -38,7 +38,7 @@ jobs:
         uses: astral-sh/setup-uv@v6
 
       - name: Regenerate and commit drift
-        if: ${{ inputs.self_heal }}
+        if: ${{ inputs.auto_sync }}
         run: |
           uvx --from "$TOOL" agent-plugin-sync generate .
           if [[ -z "$(git status --porcelain)" ]]; then
