@@ -8,10 +8,12 @@ from typing import Any
 
 
 def read_json(path: pathlib.Path) -> Any:
+    """Parse a JSON file."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def read_json_if_exists(path: pathlib.Path) -> Any | None:
+    """Parse a JSON file, or return None if it doesn't exist."""
     return read_json(path) if path.exists() else None
 
 
@@ -27,4 +29,5 @@ def write_file(path: pathlib.Path, contents: str) -> None:
 
 
 def write_json(path: pathlib.Path, value: Any) -> None:
+    """Write a value as deterministically formatted JSON."""
     write_file(path, serialize(value))

@@ -14,6 +14,7 @@ from agent_plugin_sync.generators import artifact
 
 
 def generate_gemini(plugin_model: loader.Model) -> list[artifact.GeneratedFile]:
+    """Build the Gemini CLI extension manifest (gemini-extension.json)."""
     plugin = plugin_model.plugin
     google = models.google_extension(plugin)
     gemini = google.gemini

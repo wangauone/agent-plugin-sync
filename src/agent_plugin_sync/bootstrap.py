@@ -24,11 +24,15 @@ SPEC_MCP_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
 
 @dataclasses.dataclass
 class BootstrapResult:
+    """The seeded source files: plugin.json contents, and mcp.json if any."""
+
     plugin: dict[str, Any]
     mcp: dict[str, Any] | None
 
 
 def bootstrap(root: pathlib.Path) -> BootstrapResult:
+    """Seed Agent Plugin spec source (plugin.json + mcp.json) from an existing
+    gemini-extension.json. One-time scaffolding; review inferred fields after."""
     gemini_path = root / "gemini-extension.json"
     if not gemini_path.exists():
         raise FileNotFoundError(

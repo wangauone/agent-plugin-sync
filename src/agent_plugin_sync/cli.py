@@ -21,6 +21,7 @@ from agent_plugin_sync.generators import artifact
 
 
 def main(argv: list[str] | None = None) -> None:
+    """Parse arguments and dispatch to the selected command."""
     parser = argparse.ArgumentParser(prog="agent-plugin-sync")
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("bootstrap", "generate", "check", "validate"):
@@ -43,6 +44,7 @@ def main(argv: list[str] | None = None) -> None:
 
 
 def cmd_bootstrap(root: pathlib.Path, force: bool) -> None:
+    """Seed plugin.json + mcp.json from gemini-extension.json for each plugin found."""
     roots = _resolve_roots(root, "gemini-extension.json")
     multi = len(roots) > 1
     for plugin_root in roots:
@@ -63,6 +65,7 @@ def cmd_bootstrap(root: pathlib.Path, force: bool) -> None:
 
 
 def cmd_generate(root: pathlib.Path) -> None:
+    """Write all harness manifests for each plugin found."""
     roots = _resolve_roots(root, "plugin.json")
     multi = len(roots) > 1
     for plugin_root in roots:
@@ -74,6 +77,7 @@ def cmd_generate(root: pathlib.Path) -> None:
 
 
 def cmd_check(root: pathlib.Path) -> None:
+    """Fail if any generated file is stale (CI drift guard)."""
     roots = _resolve_roots(root, "plugin.json")
     checked = 0
     stale: list[str] = []
@@ -92,6 +96,7 @@ def cmd_check(root: pathlib.Path) -> None:
 
 
 def cmd_validate(root: pathlib.Path) -> None:
+    """Validate each plugin's source and report any errors."""
     roots = _resolve_roots(root, "plugin.json")
     multi = len(roots) > 1
     all_ok = True

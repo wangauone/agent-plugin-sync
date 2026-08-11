@@ -24,6 +24,7 @@ _PASSTHROUGH = {"version", "description", "author", "homepage", "license", "repo
 
 
 def generate_claude(plugin_model: loader.Model) -> list[artifact.GeneratedFile]:
+    """Build the Claude Code manifest (.claude-plugin/plugin.json), MCP inline."""
     plugin = plugin_model.plugin
 
     out: dict[str, Any] = {"name": plugin.name}

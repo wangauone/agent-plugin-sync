@@ -17,11 +17,14 @@ from agent_plugin_sync import io, models
 
 @dataclasses.dataclass
 class ValidationResult:
+    """Outcome of validation: ok, plus any namespaced error messages."""
+
     ok: bool
     errors: list[str] = dataclasses.field(default_factory=list)
 
 
 def validate_plugin(root: pathlib.Path) -> ValidationResult:
+    """Validate a plugin root's source files against the typed models."""
     errors: list[str] = []
 
     raw = io.read_json(root / "plugin.json")
