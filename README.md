@@ -59,18 +59,21 @@ which also powers editor autocomplete if referenced via `$schema`.
 
 ## Commands
 
-```bash
-# one-time: seed plugin.json + mcp.json from an existing gemini-extension.json
-agent-plugin-sync bootstrap ./path/to/plugin-repo
+Two core commands:
 
-# write all harness manifests from plugin.json
+```bash
+# write all harness manifests from plugin.json + mcp.json
 agent-plugin-sync generate ./path/to/plugin-repo
 
-# CI drift guard: fail if any generated file is stale
-agent-plugin-sync check ./path/to/plugin-repo
-
-# validate the com.google.cloud source against its schema
+# is the plugin in good shape? — source is valid AND generated files are current
 agent-plugin-sync validate ./path/to/plugin-repo
+```
+
+One-time onboarding utility:
+
+```bash
+# seed plugin.json + mcp.json from an existing gemini-extension.json
+agent-plugin-sync bootstrap ./path/to/plugin-repo
 ```
 
 `[root]` defaults to the current directory.
@@ -93,8 +96,8 @@ agent-plugin-sync generate ./path/to/plugin-repo
 ## Recommended wiring
 
 - **pre-commit hook** → `generate`, so outputs are always fresh.
-- **CI (reusable workflow)** → `check` + `validate` on PRs, so files never drift
-  and the source is always valid.
+- **CI (reusable workflow)** → `validate` on PRs — one command that fails if the
+  source is invalid *or* the generated files are stale.
 
 Authors only ever edit `plugin.json`; the harness files are generated.
 
