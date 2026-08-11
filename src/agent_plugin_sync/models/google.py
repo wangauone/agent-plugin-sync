@@ -8,6 +8,16 @@ This is our own namespace, so unknown fields are forbidden (``extra="forbid"``)
 to catch typos. `google_extension()` extracts the bucket from a spec Plugin —
 keeping that dependency pointed our way (ours -> spec), never the reverse.
 Ordered entry-first; the trailing model_rebuild() resolves forward refs.
+
+Example extensions["com.google.cloud"] bucket (parsed into GoogleCloudExtension)::
+
+    {
+      "config": [
+        {"key": "POSTGRES_HOST", "title": "Host",
+         "description": "Host or IP address of the server", "sensitive": false}
+      ],
+      "gemini": {"contextFileName": "POSTGRESQL.md", "mcpServerName": "postgresql"}
+    }
 """
 
 from __future__ import annotations

@@ -6,6 +6,23 @@ root-level MCP file the spec's `mcp.json` — see docs/harness-plugin-layouts.md
 
 Config vars become ``userConfig``, keyed by the lowercased env var name.
 Marketplace generation is intentionally out of scope.
+
+Generated .claude-plugin/plugin.json::
+
+    {
+      "name": "postgres",
+      "version": "0.2.2",
+      "description": "...",
+      "author": {"name": "Google LLC"},
+      "homepage": "...", "license": "Apache-2.0", "repository": "...",
+      "userConfig": {
+        "postgres_host": {"title": "Host", "description": "...",
+                          "type": "string", "sensitive": false}
+      },
+      "mcpServers": {
+        "postgresql": {"command": "npx", "args": ["-y", "some-mcp-server", "--stdio"]}
+      }
+    }
 """
 
 from __future__ import annotations

@@ -3,6 +3,21 @@
 Note the reverse rewrite of the MCP command: the spec mcp.json uses a
 ``./``-relative command anchored by ``cwd: ${PLUGIN_ROOT}``, while Gemini expects
 its own ``${extensionPath}${/}...`` placeholder and no cwd/type fields.
+
+Generated gemini-extension.json::
+
+    {
+      "name": "postgres",
+      "version": "0.2.2",
+      "description": "...",
+      "mcpServers": {
+        "postgresql": {"command": "npx", "args": ["-y", "some-mcp-server", "--stdio"]}
+      },
+      "contextFileName": "POSTGRESQL.md",
+      "settings": [
+        {"name": "Host", "description": "...", "envVar": "POSTGRES_HOST"}
+      ]
+    }
 """
 
 from __future__ import annotations
