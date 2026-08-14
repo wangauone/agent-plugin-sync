@@ -3,4 +3,4 @@
 __version__ = "0.1.0"
 
 # Namespace we own for generator input inside plugin.json `extensions`.
-GOOGLE_NS = "com.google.cloud"
+PLUGIN_EXTENSION_NS = "com.google.cloud.data.agent-plugins"

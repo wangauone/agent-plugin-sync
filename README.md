@@ -45,7 +45,7 @@ mistaken for new plugins (dot-directories are skipped).
 ## Source of truth
 
 - **`plugin.json`** — Agent Plugin spec manifest. Harness-neutral facts plus one
-  `extensions["com.google.cloud"]` bucket holding the generator input:
+  `extensions["com.google.cloud.data.agent-plugins"]` bucket holding the generator input:
   - `config[]` — user config vars, written once → become Gemini `settings` and Claude `userConfig`.
   - `gemini` — Gemini-only bits (`contextFileName`, `mcpServerName`).
 - **`mcp.json`** — Agent Plugin spec MCP server config.
@@ -53,9 +53,10 @@ mistaken for new plugins (dot-directories are skipped).
 In a monorepo, each plugin has its own `plugin.json` + `mcp.json` at its own
 directory; there is no shared source across plugins.
 
-The bucket is validated against
-[`src/agent_plugin_sync/schema/com.google.cloud.schema.json`](src/agent_plugin_sync/schema/com.google.cloud.schema.json),
-which also powers editor autocomplete if referenced via `$schema`.
+The bucket is validated against the typed models in
+[`src/agent_plugin_sync/models/extension.py`](src/agent_plugin_sync/models/extension.py);
+`validate` reports any errors prefixed with the `com.google.cloud.data.agent-plugins`
+namespace so authors can locate them.
 
 ## Commands
 

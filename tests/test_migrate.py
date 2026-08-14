@@ -37,10 +37,10 @@ class TestMigrate:
         result = migrate.migrate(tmp_path)
 
         # Assert
-        google = result.plugin["extensions"]["com.google.cloud"]
+        extension = result.plugin["extensions"]["com.google.cloud.data.agent-plugins"]
         assert result.plugin["name"] == "demo"
         assert result.plugin["version"] == "1.0.0"
-        assert google["gemini"]["contextFileName"] == "CTX.md"
+        assert extension["gemini"]["contextFileName"] == "CTX.md"
 
     def test_converts_settings_to_config_and_infers_sensitivity(self, tmp_path):
         """Settings become config vars; secret-looking names are marked sensitive."""
@@ -48,7 +48,7 @@ class TestMigrate:
         _seed_gemini_extension(tmp_path)
 
         # Act
-        config = migrate.migrate(tmp_path).plugin["extensions"]["com.google.cloud"]["config"]
+        config = migrate.migrate(tmp_path).plugin["extensions"]["com.google.cloud.data.agent-plugins"]["config"]
 
         # Assert
         by_key = {var["key"]: var for var in config}

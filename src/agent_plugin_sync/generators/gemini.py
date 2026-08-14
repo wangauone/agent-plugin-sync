@@ -31,8 +31,8 @@ from agent_plugin_sync.generators import artifact
 def generate_gemini(plugin_model: loader.Model) -> list[artifact.GeneratedFile]:
     """Build the Gemini CLI extension manifest (gemini-extension.json)."""
     plugin = plugin_model.plugin
-    google = models.google_extension(plugin)
-    gemini = google.gemini
+    ext = models.plugin_extension(plugin)
+    gemini = ext.gemini
 
     out: dict[str, Any] = {"name": plugin.name}
     out.update(plugin.model_dump(include={"version", "description"}, exclude_none=True, by_alias=True))
@@ -52,7 +52,7 @@ def generate_gemini(plugin_model: loader.Model) -> list[artifact.GeneratedFile]:
         out["contextFileName"] = gemini.context_file_name
 
     settings = [
-        {"name": c.title, "description": c.description, "envVar": c.key} for c in google.config
+        {"name": c.title, "description": c.description, "envVar": c.key} for c in ext.config
     ]
     if settings:
         out["settings"] = settings

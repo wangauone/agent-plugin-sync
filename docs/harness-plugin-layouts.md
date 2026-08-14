@@ -18,8 +18,8 @@ Who produces each layout:
 | Agent Plugin spec | source of truth (hand-authored / `agent-plugin-sync`) |
 | Gemini CLI | `agent-plugin-sync generate` |
 | Claude Code | `agent-plugin-sync generate` |
-| Codex | reads the Agent Plugin spec files directly (no vendor file) |
-| Antigravity CLI | `agy plugin import gemini` (converts the Gemini output) |
+| Codex | `agent-plugin-sync generate` (`.codex-plugin/`) |
+| Antigravity CLI | `agent-plugin-sync generate` (`mcp_config.json`) |
 
 ## MCP placement (our convention)
 
@@ -30,7 +30,10 @@ One opinionated rule keeps the plugin root clean — a single MCP file, no looka
 - **Vendors inline their own MCP** in their manifest — Gemini in
   `gemini-extension.json`, Claude in `.claude-plugin/plugin.json` (`mcpServers`).
 - **No `.mcp.json` at the root.** The sole root-level MCP file is the spec's `mcp.json`.
-- **Codex** reads the spec's root `mcp.json`, so it needs no vendor MCP file.
+- **Codex** reads `.codex-plugin/.mcp.json` (legacy), referenced from
+  `.codex-plugin/plugin.json`. It can't pass user env vars through the spec
+  `mcp.json` yet, so we don't route it there.
+- **Antigravity** reads its own root `mcp_config.json`.
 
 ---
 
@@ -50,6 +53,10 @@ Source: https://github.com/agentplugins/agent-plugins-spec/blob/main/spec/1.0.0.
 - Only `plugin.json` is required, **plus at least one component** (skills or MCP).
 - MCP loads **only** from root `mcp.json` — inline config / alternate paths forbidden.
 - Skill discovery is **non-recursive** (immediate children of `skills/`).
+
+> The spec requires `$schema`, but our **shipped** `plugin.json` currently omits
+> it so Codex routes to `.codex-plugin/` (see [Codex](#codex)). It goes back once
+> Codex can pass user config through the spec.
 
 ---
 
@@ -95,12 +102,34 @@ Source: https://code.claude.com/docs/en/plugins-reference
 
 Sources: https://learn.chatgpt.com/docs/build-plugins · https://developers.openai.com/plugins/build/plugins
 
-Codex is adopting the Agent Plugin spec, so it reads the **spec files directly** —
-its layout is the [Agent Plugin spec](#agent-plugin-spec) tree (`plugin.json` +
-`mcp.json` + `skills/`). `agent-plugin-sync` generates **no** Codex-specific files.
+Codex reads the Agent Plugin spec, but its spec `mcp.json` cannot pass user
+environment variables to an MCP server: `env_vars` is rejected, `${VAR}` in `env`
+is not expanded, and the ambient env is cleared
+([openai/codex#36854](https://github.com/openai/codex/issues/36854)). So we
+generate Codex's **legacy** `.codex-plugin/` layout in every case, which does
+forward `env_vars`.
 
-> Native (pre-spec) Codex used `.codex-plugin/plugin.json` referencing MCP via an
-> `mcpServers` path field. We rely on the spec path instead.
+```
+<plugin-root>/
+├── plugin.json               # spec manifest, but WITHOUT $schema (see below)
+├── .codex-plugin/
+│   ├── plugin.json           # legacy manifest; mcpServers -> "./.codex-plugin/.mcp.json"
+│   └── .mcp.json             # legacy MCP: command/args + env_vars (forwarded from user env)
+└── skills/
+    └── <name>/SKILL.md
+```
+
+- **Omit `$schema` from the root `plugin.json`.** Codex treats a root manifest as
+  Agent Plugin only when its `$schema` is an `agent-plugins.org` URI; without it,
+  Codex falls through to `.codex-plugin/`.
+- The `mcpServers` path in `.codex-plugin/plugin.json` is **root-relative**
+  (`./.codex-plugin/.mcp.json`), not relative to `.codex-plugin/`.
+- `.codex-plugin/.mcp.json` uses `env_vars: [...]` so the user's environment
+  reaches the server, the capability the spec `mcp.json` lacks.
+- Install/discovery still needs a marketplace descriptor (`.claude-plugin/marketplace.json`).
+
+> When Codex can pass user config through the spec, add `$schema` back and drop
+> this generator; Codex (and the other spec-only clients) then read the spec directly.
 
 ---
 
@@ -108,13 +137,18 @@ its layout is the [Agent Plugin spec](#agent-plugin-spec) tree (`plugin.json` +
 
 Sources: https://antigravity.google/docs/cli/plugins · https://antigravity.google/docs/cli/gcli-migration
 
-We don't author AGY files. AGY support goes through the **Gemini** path: install the
-Gemini extension, then `agy plugin import gemini`, which converts it (manifest, MCP,
-and skills) into AGY's native layout below.
+`agy plugin install` reads the root `plugin.json` leniently (name, description,
+sibling `skills/`) but takes MCP only from its own `mcp_config.json`, never the
+spec's `mcp.json`. So we generate `mcp_config.json` alongside the spec files.
 
 ```
-~/.gemini/antigravity-cli/plugins/<name>/   # produced by `agy plugin import gemini`
-├── plugin.json            # manifest ($schema, name; optional description)
-├── mcp_config.json        # MCP servers (from the Gemini extension's mcpServers)
-└── skills/                # from the Gemini extension's skills/
+<plugin-root>/
+├── plugin.json            # spec manifest (AGY ignores $schema/version/extensions)
+├── mcp_config.json        # MCP servers for AGY — subset of mcp.json (same mcpServers,
+│                          #   without $schema or per-server type)
+└── skills/
+    └── <name>/SKILL.md
 ```
+
+- MCP comes from `mcp_config.json`; the spec's `mcp.json` is ignored by AGY.
+- AGY doesn't track version, so there's no in-place upgrade.

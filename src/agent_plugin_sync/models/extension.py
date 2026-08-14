@@ -1,15 +1,15 @@
-"""Typed models for our com.google.cloud extension bucket.
+"""Typed models for our com.google.cloud.data.agent-plugins extension bucket.
 
-    GoogleCloudExtension  ->  extensions["com.google.cloud"]
+    PluginExtension  ->  extensions["com.google.cloud.data.agent-plugins"]
     ConfigVar             ->  an item in config[]
     GeminiConfig          ->  the gemini object
 
 This is our own namespace, so unknown fields are forbidden (``extra="forbid"``)
-to catch typos. `google_extension()` extracts the bucket from a spec Plugin —
+to catch typos. `plugin_extension()` extracts the bucket from a spec Plugin —
 keeping that dependency pointed our way (ours -> spec), never the reverse.
 Ordered entry-first; the trailing model_rebuild() resolves forward refs.
 
-Example extensions["com.google.cloud"] bucket (parsed into GoogleCloudExtension)::
+Example extensions["com.google.cloud.data.agent-plugins"] bucket (parsed into PluginExtension)::
 
     {
       "config": [
@@ -31,12 +31,12 @@ from agent_plugin_sync.models import spec
 _STRICT = pydantic.ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="forbid")
 
 
-def google_extension(plugin: spec.Plugin) -> GoogleCloudExtension:
-    """Extract and validate the com.google.cloud bucket from a spec Plugin."""
-    return GoogleCloudExtension.model_validate(plugin.extensions.get(agent_plugin_sync.GOOGLE_NS, {}))
+def plugin_extension(plugin: spec.Plugin) -> PluginExtension:
+    """Extract and validate the com.google.cloud.data.agent-plugins bucket from a spec Plugin."""
+    return PluginExtension.model_validate(plugin.extensions.get(agent_plugin_sync.PLUGIN_EXTENSION_NS, {}))
 
 
-class GoogleCloudExtension(pydantic.BaseModel):
+class PluginExtension(pydantic.BaseModel):
     model_config = _STRICT
 
     comment: str | None = None
@@ -62,4 +62,4 @@ class GeminiConfig(pydantic.BaseModel):
     mcp_server_name: str | None = None
 
 
-GoogleCloudExtension.model_rebuild()
+PluginExtension.model_rebuild()

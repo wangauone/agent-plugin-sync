@@ -1,7 +1,7 @@
 """Validate a plugin's source files against the typed models.
 
 Errors are prefixed with the file/namespace they came from (e.g.
-``com.google.cloud/config/0/key``) so authors can locate them.
+``com.google.cloud.data.agent-plugins/config/0/key``) so authors can locate them.
 """
 
 from __future__ import annotations
@@ -13,6 +13,8 @@ import pydantic
 
 import agent_plugin_sync
 from agent_plugin_sync import io, models
+
+_AGENT_PLUGIN_SCHEMA_PREFIX = "https://agent-plugins.org/schemas/"
 
 
 @dataclasses.dataclass
@@ -34,11 +36,22 @@ def validate_plugin(root: pathlib.Path) -> ValidationResult:
         # Malformed top level; can't check the bucket meaningfully after this.
         return ValidationResult(ok=False, errors=_format(e, "plugin.json"))
 
-    bucket = plugin.extensions.get(agent_plugin_sync.GOOGLE_NS, {})
+    # Codex reads a root manifest as Agent Plugin (and so uses the spec mcp.json,
+    # which cannot forward user env vars) only when its $schema is an agent-plugins
+    # URI. We route Codex to the generated .codex-plugin/ instead, so $schema must
+    # be absent; with it present, that generated file is silently ignored.
+    schema = raw.get("$schema", "")
+    if isinstance(schema, str) and schema.startswith(_AGENT_PLUGIN_SCHEMA_PREFIX):
+        errors.append(
+            "plugin.json: omit $schema; with it, Codex reads the spec mcp.json and ignores "
+            "the generated .codex-plugin/ (its env_vars)"
+        )
+
+    bucket = plugin.extensions.get(agent_plugin_sync.PLUGIN_EXTENSION_NS, {})
     try:
-        models.GoogleCloudExtension.model_validate(bucket)
+        models.PluginExtension.model_validate(bucket)
     except pydantic.ValidationError as e:
-        errors += _format(e, agent_plugin_sync.GOOGLE_NS)
+        errors += _format(e, agent_plugin_sync.PLUGIN_EXTENSION_NS)
 
     mcp_raw = io.read_json_if_exists(root / "mcp.json")
     if mcp_raw is not None:

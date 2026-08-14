@@ -18,7 +18,6 @@ from typing import Any
 import agent_plugin_sync
 from agent_plugin_sync import io
 
-SPEC_PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 SPEC_MCP_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
 
 
@@ -40,11 +39,11 @@ def migrate(root: pathlib.Path) -> MigrateResult:
         )
     gem = io.read_json(gemini_path)
 
-    # --- Build the com.google.cloud extension bucket ---
-    google: dict[str, Any] = {}
+    # --- Build the com.google.cloud.data.agent-plugins extension bucket ---
+    extension: dict[str, Any] = {}
     settings = gem.get("settings") or []
     if settings:
-        google["config"] = [_to_config_var(s) for s in settings]
+        extension["config"] = [_to_config_var(s) for s in settings]
 
     gemini_bits: dict[str, Any] = {}
     if gem.get("contextFileName"):
@@ -54,10 +53,12 @@ def migrate(root: pathlib.Path) -> MigrateResult:
     if first_server:
         gemini_bits["mcpServerName"] = first_server
     if gemini_bits:
-        google["gemini"] = gemini_bits
+        extension["gemini"] = gemini_bits
 
     # --- plugin.json ---
-    plugin: dict[str, Any] = {"$schema": SPEC_PLUGIN_SCHEMA, "name": gem["name"]}
+    # No $schema: with it, Codex reads the spec mcp.json and ignores the generated
+    # .codex-plugin/ (see validate.py / docs/harness-plugin-layouts.md).
+    plugin: dict[str, Any] = {"name": gem["name"]}
     if gem.get("version"):
         plugin["version"] = gem["version"]
     if gem.get("description"):
@@ -71,7 +72,7 @@ def migrate(root: pathlib.Path) -> MigrateResult:
         plugin["repository"] = repo
     if (root / "LICENSE").exists():
         plugin["license"] = "Apache-2.0"
-    plugin["extensions"] = {agent_plugin_sync.GOOGLE_NS: google}
+    plugin["extensions"] = {agent_plugin_sync.PLUGIN_EXTENSION_NS: extension}
 
     # --- mcp.json (only if the gemini extension declared MCP servers) ---
     mcp: dict[str, Any] | None = None

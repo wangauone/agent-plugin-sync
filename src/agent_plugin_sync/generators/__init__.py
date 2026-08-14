@@ -1,18 +1,20 @@
 """Registry of generators. Each turns the canonical model into a set of files.
 
-Codex and Antigravity are intentionally absent: Codex reads the Agent Plugin spec
-files (plugin.json + mcp.json + skills/) directly, and Antigravity consumes the
-Gemini output via `agy plugin import gemini`. Neither needs a generated vendor file.
+One generator per non-spec harness: Gemini, Claude, Codex (legacy `.codex-plugin/`,
+because its spec `mcp.json` cannot forward user env vars), and Antigravity
+(`mcp_config.json`). See docs/harness-plugin-layouts.md.
 """
 
 from __future__ import annotations
 
 from agent_plugin_sync import loader
-from agent_plugin_sync.generators import artifact, claude, gemini
+from agent_plugin_sync.generators import antigravity, artifact, claude, codex, gemini
 
 GENERATORS = {
     "gemini": gemini.generate_gemini,
     "claude": claude.generate_claude,
+    "codex": codex.generate_codex,
+    "antigravity": antigravity.generate_antigravity,
 }
 
 

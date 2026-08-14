@@ -31,6 +31,7 @@ def make_plugin():
         gemini: dict | None = None,
         mcp: dict | None = None,
         skills: bool = False,
+        schema: bool = False,
     ) -> pathlib.Path:
         root = pathlib.Path(root)
         ns: dict = {}
@@ -39,15 +40,18 @@ def make_plugin():
         if gemini is not None:
             ns["gemini"] = gemini
 
-        plugin = {
-            "$schema": _PLUGIN_SCHEMA,
+        # $schema is omitted by default: with it, Codex ignores the generated
+        # .codex-plugin/. `schema=True` opts in to exercise that validation error.
+        plugin: dict = {
             "name": name,
             "version": "0.1.0",
             "description": "Demo plugin.",
             "author": {"name": "Google LLC"},
             "license": "Apache-2.0",
-            "extensions": {"com.google.cloud": ns},
+            "extensions": {"com.google.cloud.data.agent-plugins": ns},
         }
+        if schema:
+            plugin = {"$schema": _PLUGIN_SCHEMA, **plugin}
         _write_json(root / "plugin.json", plugin)
 
         if mcp is not None:

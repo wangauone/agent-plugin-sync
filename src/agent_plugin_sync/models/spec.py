@@ -19,7 +19,7 @@ Example plugin.json (parsed into Plugin)::
       "author": {"name": "Google LLC", "email": "..."},
       "homepage": "...", "repository": "...", "license": "Apache-2.0",
       "keywords": ["postgres", "database"],
-      "extensions": {"com.google.cloud": {...}}    # see models/google.py
+      "extensions": {"com.google.cloud.data.agent-plugins": {...}}    # see models/extension.py
     }
 
 Example mcp.json (parsed into Mcp)::

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from agent_plugin_sync import loader
-from agent_plugin_sync.generators import claude, gemini
+from agent_plugin_sync.generators import antigravity, claude, codex, gemini
 from tests.helpers import generated_json, generated_paths
 
 
@@ -149,3 +149,100 @@ class TestClaudeGenerator:
 
         # Assert
         assert manifest["skills"] == "./skills/"
+
+
+class TestCodexGenerator:
+    def test_emits_legacy_manifest_pointing_at_root_relative_mcp_file(self, make_plugin, tmp_path):
+        """Codex gets .codex-plugin/{plugin.json,.mcp.json}; the manifest's mcpServers
+        path is root-relative so Codex resolves it correctly."""
+        # Arrange
+        root = make_plugin(tmp_path, mcp={"demo": {"type": "stdio", "command": "npx"}})
+
+        # Act
+        files = codex.generate_codex(loader.load_model(root))
+
+        # Assert
+        assert generated_paths(files) == {".codex-plugin/plugin.json", ".codex-plugin/.mcp.json"}
+        manifest = generated_json(files, ".codex-plugin/plugin.json")
+        assert manifest["mcpServers"] == "./.codex-plugin/.mcp.json"
+
+    def test_maps_config_vars_to_env_vars(self, make_plugin, tmp_path):
+        """Config keys become the server's env_vars (forwarded from the user env)."""
+        # Arrange
+        root = make_plugin(
+            tmp_path,
+            config=[
+                {"key": "DEMO_HOST", "title": "Host", "description": "h"},
+                {"key": "DEMO_PASSWORD", "title": "Password", "description": "p", "sensitive": True},
+            ],
+            mcp={"demo": {"type": "stdio", "command": "npx"}},
+        )
+
+        # Act
+        mcp = generated_json(codex.generate_codex(loader.load_model(root)), ".codex-plugin/.mcp.json")
+
+        # Assert
+        assert mcp["mcpServers"]["demo"]["env_vars"] == ["DEMO_HOST", "DEMO_PASSWORD"]
+
+    def test_drops_spec_only_type(self, make_plugin, tmp_path):
+        """The spec-only `type` field must not leak into the legacy MCP file."""
+        # Arrange
+        root = make_plugin(tmp_path, mcp={"demo": {"type": "stdio", "command": "npx"}})
+
+        # Act
+        mcp = generated_json(codex.generate_codex(loader.load_model(root)), ".codex-plugin/.mcp.json")
+
+        # Assert
+        assert "type" not in mcp["mcpServers"]["demo"]
+
+    def test_manifest_only_when_no_mcp(self, make_plugin, tmp_path):
+        """A plugin without MCP produces just the manifest, with no mcpServers key."""
+        # Arrange
+        root = make_plugin(tmp_path, config=[{"key": "X", "title": "X", "description": "x"}])
+
+        # Act
+        files = codex.generate_codex(loader.load_model(root))
+
+        # Assert
+        assert generated_paths(files) == {".codex-plugin/plugin.json"}
+        assert "mcpServers" not in generated_json(files, ".codex-plugin/plugin.json")
+
+    def test_includes_skills_path_when_skills_present(self, make_plugin, tmp_path):
+        """A plugin that ships skills advertises the skills path."""
+        # Arrange
+        root = make_plugin(tmp_path, skills=True)
+
+        # Act
+        manifest = generated_json(codex.generate_codex(loader.load_model(root)), ".codex-plugin/plugin.json")
+
+        # Assert
+        assert manifest["skills"] == "./skills"
+
+
+class TestAntigravityGenerator:
+    def test_emits_mcp_config_subset(self, make_plugin, tmp_path):
+        """mcp_config.json mirrors mcpServers, dropping the spec-only `type`."""
+        # Arrange
+        root = make_plugin(
+            tmp_path,
+            mcp={"demo": {"type": "stdio", "command": "npx", "args": ["-y", "demo-mcp"]}},
+        )
+
+        # Act
+        files = antigravity.generate_antigravity(loader.load_model(root))
+
+        # Assert
+        assert generated_paths(files) == {"mcp_config.json"}
+        server = generated_json(files, "mcp_config.json")["mcpServers"]["demo"]
+        assert server == {"command": "npx", "args": ["-y", "demo-mcp"]}
+
+    def test_omits_file_when_no_mcp(self, make_plugin, tmp_path):
+        """No MCP servers -> no mcp_config.json at all."""
+        # Arrange
+        root = make_plugin(tmp_path, config=[{"key": "X", "title": "X", "description": "x"}])
+
+        # Act
+        files = antigravity.generate_antigravity(loader.load_model(root))
+
+        # Assert
+        assert files == []

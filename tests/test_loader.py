@@ -46,7 +46,7 @@ class TestDiscoverRoots:
 
 class TestLoadModel:
     def test_reads_manifest_mcp_extension_and_skills(self, make_plugin, tmp_path):
-        """load_model surfaces plugin.json, mcp.json, the google bucket, and skills presence."""
+        """load_model surfaces plugin.json, mcp.json, the extension bucket, and skills presence."""
         # Arrange
         root = make_plugin(
             tmp_path,
@@ -61,7 +61,7 @@ class TestLoadModel:
         # Assert
         assert loaded.plugin.name == "demo"
         assert loaded.mcp.mcp_servers["demo"].command == "npx"
-        assert models.google_extension(loaded.plugin).config[0].key == "DEMO_HOST"
+        assert models.plugin_extension(loaded.plugin).config[0].key == "DEMO_HOST"
         assert loaded.has_skills is True
 
     def test_mcp_is_none_when_absent(self, make_plugin, tmp_path):
