@@ -1,10 +1,9 @@
 # CI for agent-plugin-sync itself.
 #
-# - `unit`: the fast, hermetic suite (unit + golden generation). Always runs.
-# - `integration`: drives real harness CLIs (`pytest -m integration`). Tests
-#   skip when their CLI is absent, so this job covers whatever CLIs the runner
-#   can install. Codex, Gemini, and Claude Code install from npm; AGY isn't
-#   installable on Linux runners, so its test skips here. Best-effort, not a gate.
+# - `unit`: the fast, hermetic suite. Runs on every push/PR and gates merges.
+# - `integration`: drives real harness CLIs (`pytest -m integration`). These start
+#   an authenticated harness session, which CI runners don't have, so this job is
+#   manual-only (workflow_dispatch) and never gates a PR. Run it where auth exists.
 name: tests
 
 on:
@@ -19,10 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-      - name: Unit + golden tests
+      - name: Unit tests
         run: uv run pytest -q
 
   integration:
+    # Only on manual dispatch: the harness sessions need auth CI doesn't have.
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
