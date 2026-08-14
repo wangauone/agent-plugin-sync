@@ -18,6 +18,12 @@ dev = ["pytest>=8"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+# Integration tests drive real harness CLIs (and a live session, so auth); they
+# are excluded by default. Opt in with `pytest -m integration`.
+addopts = "-m 'not integration'"
+markers = [
+    "integration: end-to-end test that installs a plugin into a real harness CLI",
+]
 
 [build-system]
 requires = ["hatchling"]

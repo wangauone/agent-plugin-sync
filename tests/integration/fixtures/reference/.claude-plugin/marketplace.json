@@ -1,0 +1,12 @@
+{
+  "name": "demo-marketplace",
+  "owner": {
+    "name": "agent-plugin-sync tests"
+  },
+  "plugins": [
+    {
+      "name": "demo",
+      "source": "./"
+    }
+  ]
+}

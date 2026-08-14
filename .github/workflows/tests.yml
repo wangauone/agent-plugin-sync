@@ -1,0 +1,36 @@
+# CI for agent-plugin-sync itself.
+#
+# - `unit`: the fast, hermetic suite (unit + golden generation). Always runs.
+# - `integration`: drives real harness CLIs (`pytest -m integration`). Tests
+#   skip when their CLI is absent, so this job covers whatever CLIs the runner
+#   can install. Codex, Gemini, and Claude Code install from npm; AGY isn't
+#   installable on Linux runners, so its test skips here. Best-effort, not a gate.
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Unit + golden tests
+        run: uv run pytest -q
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install harness CLIs
+        run: npm install -g @openai/codex @google/gemini-cli @anthropic-ai/claude-code
+      - name: Integration tests (harness CLIs)
+        run: uv run pytest -m integration -v

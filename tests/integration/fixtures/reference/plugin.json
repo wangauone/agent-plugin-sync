@@ -1,0 +1,24 @@
+{
+  "name": "demo",
+  "version": "0.1.0",
+  "description": "Reference plugin for integration tests.",
+  "author": {
+    "name": "Google LLC"
+  },
+  "license": "Apache-2.0",
+  "extensions": {
+    "com.google.cloud.data.agent-plugins": {
+      "config": [
+        {
+          "key": "DEMO_HOST",
+          "title": "Host",
+          "description": "Database host"
+        }
+      ],
+      "gemini": {
+        "contextFileName": "DEMO.md",
+        "mcpServerName": "demo"
+      }
+    }
+  }
+}

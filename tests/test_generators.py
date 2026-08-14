@@ -87,6 +87,21 @@ class TestClaudeGenerator:
         manifest = generated_json(files, ".claude-plugin/plugin.json")
         assert manifest["mcpServers"]["demo"]["command"] == "npx"
 
+    def test_rewrites_relative_command_to_claude_placeholder(self, make_plugin, tmp_path):
+        """A ./ command is retargeted to ${CLAUDE_PLUGIN_ROOT} so Claude resolves it."""
+        # Arrange
+        root = make_plugin(
+            tmp_path, mcp={"demo": {"type": "stdio", "command": "./probe.sh"}}
+        )
+
+        # Act
+        manifest = generated_json(
+            claude.generate_claude(loader.load_model(root)), ".claude-plugin/plugin.json"
+        )
+
+        # Assert
+        assert manifest["mcpServers"]["demo"]["command"] == "${CLAUDE_PLUGIN_ROOT}/probe.sh"
+
     def test_retargets_plugin_root_placeholder(self, make_plugin, tmp_path):
         """The spec's ${PLUGIN_ROOT} becomes Claude's ${CLAUDE_PLUGIN_ROOT}."""
         # Arrange
@@ -123,6 +138,23 @@ class TestClaudeGenerator:
             "type": "string",
             "sensitive": True,
         }
+
+    def test_wires_config_vars_into_server_env(self, make_plugin, tmp_path):
+        """Each config var reaches the server as env `KEY: ${user_config.key}`."""
+        # Arrange
+        root = make_plugin(
+            tmp_path,
+            config=[{"key": "DEMO_HOST", "title": "Host", "description": "h"}],
+            mcp={"demo": {"type": "stdio", "command": "npx"}},
+        )
+
+        # Act
+        manifest = generated_json(
+            claude.generate_claude(loader.load_model(root)), ".claude-plugin/plugin.json"
+        )
+
+        # Assert
+        assert manifest["mcpServers"]["demo"]["env"]["DEMO_HOST"] == "${user_config.demo_host}"
 
     def test_omits_mcp_when_plugin_has_none(self, make_plugin, tmp_path):
         """A plugin without MCP produces a manifest with no mcpServers key."""
