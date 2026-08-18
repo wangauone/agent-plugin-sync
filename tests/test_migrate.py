@@ -68,6 +68,26 @@ class TestMigrate:
         assert server["cwd"] == "${PLUGIN_ROOT}"
         assert server["type"] == "stdio"
 
+    def test_normalizes_gemini_path_placeholders_in_args(self, tmp_path):
+        """A ${extensionPath}${/} path in args becomes the spec's ${PLUGIN_ROOT}/ form."""
+        # Arrange
+        gem = {
+            "name": "demo",
+            "mcpServers": {
+                "demo": {
+                    "command": "npx",
+                    "args": ["--tools-file", "${extensionPath}${/}tools.yaml", "--stdio"],
+                }
+            },
+        }
+        (tmp_path / "gemini-extension.json").write_text(json.dumps(gem), encoding="utf-8")
+
+        # Act
+        server = migrate.migrate(tmp_path).mcp["mcpServers"]["demo"]
+
+        # Assert
+        assert server["args"] == ["--tools-file", "${PLUGIN_ROOT}/tools.yaml", "--stdio"]
+
     def test_sets_license_only_when_a_license_file_exists(self, tmp_path):
         """License is inferred from the presence of a LICENSE file, not assumed."""
         # Arrange

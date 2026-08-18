@@ -63,9 +63,9 @@ def generate_gemini(plugin_model: loader.Model) -> list[artifact.GeneratedFile]:
 def _to_gemini_server(server: models.McpServer) -> dict[str, Any]:
     out: dict[str, Any] = {"command": _to_gemini_command(server.command)}
     if server.args is not None:
-        out["args"] = server.args
+        out["args"] = [_to_gemini_path(a) for a in server.args]
     if server.env is not None:
-        out["env"] = server.env
+        out["env"] = {k: _to_gemini_path(v) for k, v in server.env.items()}
     return out
 
 
@@ -74,3 +74,12 @@ def _to_gemini_command(command: str) -> str:
     if command.startswith("./"):
         return "${extensionPath}${/}" + command[2:]
     return command
+
+
+def _to_gemini_path(value: str) -> str:
+    """Spec plugin-root placeholder -> Gemini's ``${extensionPath}${/}`` in args/env.
+
+    ``${PLUGIN_ROOT}/tools.yaml`` -> ``${extensionPath}${/}tools.yaml``.
+    """
+    value = value.replace("${PLUGIN_ROOT}/", "${extensionPath}${/}")
+    return value.replace("${PLUGIN_ROOT}", "${extensionPath}")

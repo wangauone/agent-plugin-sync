@@ -84,9 +84,9 @@ def migrate(root: pathlib.Path) -> MigrateResult:
                 "command": _to_spec_command(server["command"]),
             }
             if server.get("args"):
-                entry["args"] = server["args"]
+                entry["args"] = [_to_spec_path(a) for a in server["args"]]
             if server.get("env"):
-                entry["env"] = server["env"]
+                entry["env"] = {k: _to_spec_path(v) for k, v in server["env"].items()}
             entry["cwd"] = "${PLUGIN_ROOT}"
             mcp_servers[name] = entry
         mcp = {"$schema": SPEC_MCP_SCHEMA, "mcpServers": mcp_servers}
@@ -128,3 +128,14 @@ def _to_spec_command(command: str) -> str:
     """``${extensionPath}${/}toolbox`` -> ``./toolbox`` for the spec mcp.json."""
     stripped = re.sub(r"^\$\{extensionPath\}\$\{/\}", "", command)
     return command if stripped == command else f"./{stripped}"
+
+
+def _to_spec_path(value: str) -> str:
+    """Gemini path placeholders -> spec placeholders in args/env values.
+
+    ``${extensionPath}${/}tools.yaml`` -> ``${PLUGIN_ROOT}/tools.yaml``. The spec
+    uses ``${PLUGIN_ROOT}`` (expanded in args/env/cwd) and a plain ``/`` separator.
+    """
+    value = value.replace("${extensionPath}${/}", "${PLUGIN_ROOT}/")
+    value = value.replace("${extensionPath}", "${PLUGIN_ROOT}")
+    return value.replace("${/}", "/")

@@ -22,6 +22,23 @@ class TestGeminiGenerator:
         # Assert
         assert manifest["mcpServers"]["demo"]["command"] == "${extensionPath}${/}toolbox"
 
+    def test_retargets_plugin_root_placeholder_in_args(self, make_plugin, tmp_path):
+        """A ${PLUGIN_ROOT}/ path in args becomes Gemini's ${extensionPath}${/} form."""
+        # Arrange
+        root = make_plugin(
+            tmp_path,
+            mcp={"demo": {"type": "stdio", "command": "npx",
+                          "args": ["--tools-file", "${PLUGIN_ROOT}/tools.yaml", "--stdio"]}},
+        )
+
+        # Act
+        manifest = generated_json(gemini.generate_gemini(loader.load_model(root)), "gemini-extension.json")
+
+        # Assert
+        assert manifest["mcpServers"]["demo"]["args"] == [
+            "--tools-file", "${extensionPath}${/}tools.yaml", "--stdio"
+        ]
+
     def test_drops_spec_only_server_keys(self, make_plugin, tmp_path):
         """`type` and `cwd` are spec-only and must not leak into the Gemini manifest."""
         # Arrange
