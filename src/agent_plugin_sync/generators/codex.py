@@ -9,7 +9,8 @@ environment. For Codex to use these files the root `plugin.json` must omit
 
 Config vars (`com.google.cloud.data.agent-plugins.config`) become `env_vars` on
 each server. The manifest references the sibling MCP file with a **root-relative**
-path (`./.codex-plugin/.mcp.json`), the way Codex resolves it.
+path (`./.codex-plugin/.mcp.json`), the way Codex resolves it. The Codex-only
+`interface` block, if any, is carried verbatim from the bucket's `codex` object.
 
 Generated .codex-plugin/plugin.json::
 
@@ -21,6 +22,7 @@ Generated .codex-plugin/plugin.json::
       "homepage": "...", "license": "Apache-2.0", "repository": "...",
       "keywords": ["postgres", "database"],
       "skills": "./skills",
+      "interface": {"displayName": "Postgres", "category": "Databases"},
       "mcpServers": "./.codex-plugin/.mcp.json"
     }
 
@@ -55,17 +57,20 @@ _PASSTHROUGH = {"version", "description", "author", "homepage", "license", "repo
 def generate_codex(plugin_model: loader.Model) -> list[artifact.GeneratedFile]:
     """Build the Codex legacy manifest (.codex-plugin/plugin.json) + its MCP file."""
     plugin = plugin_model.plugin
+    ext = models.plugin_extension(plugin)
     servers = plugin_model.mcp.mcp_servers if plugin_model.mcp else {}
 
     manifest: dict[str, Any] = {"name": plugin.name}
     manifest.update(plugin.model_dump(include=_PASSTHROUGH, exclude_none=True, by_alias=True))
     if plugin_model.has_skills:
         manifest["skills"] = "./skills"
+    if ext.codex and ext.codex.interface:
+        manifest["interface"] = ext.codex.interface
 
     files: list[artifact.GeneratedFile] = []
     if servers:
         manifest["mcpServers"] = _MCP_REF
-        env_vars = [c.key for c in models.plugin_extension(plugin).config]
+        env_vars = [c.key for c in ext.config]
         mcp = {"mcpServers": {name: _to_codex_server(s, env_vars) for name, s in servers.items()}}
         files.append(artifact.GeneratedFile(_MCP, io.serialize(mcp)))
 

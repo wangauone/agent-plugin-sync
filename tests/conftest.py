@@ -29,6 +29,7 @@ def make_plugin():
         name: str = "demo",
         config: list[dict] | None = None,
         gemini: dict | None = None,
+        codex: dict | None = None,
         mcp: dict | None = None,
         skills: bool = False,
         schema: bool = False,
@@ -39,6 +40,8 @@ def make_plugin():
             ns["config"] = config
         if gemini is not None:
             ns["gemini"] = gemini
+        if codex is not None:
+            ns["codex"] = codex
 
         # $schema is omitted by default: with it, Codex ignores the generated
         # .codex-plugin/. `schema=True` opts in to exercise that validation error.

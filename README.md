@@ -48,6 +48,7 @@ mistaken for new plugins (dot-directories are skipped).
   `extensions["com.google.cloud.data.agent-plugins"]` bucket holding the generator input:
   - `config[]` — user config vars, written once → become Gemini `settings` and Claude `userConfig`.
   - `gemini` — Gemini-only bits (`contextFileName`, `mcpServerName`).
+  - `codex` — Codex-only bits (`interface`, copied verbatim into the Codex manifest).
 - **`mcp.json`** — Agent Plugin spec MCP server config.
 
 In a monorepo, each plugin has its own `plugin.json` + `mcp.json` at its own

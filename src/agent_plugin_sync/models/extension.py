@@ -3,6 +3,7 @@
     PluginExtension  ->  extensions["com.google.cloud.data.agent-plugins"]
     ConfigVar             ->  an item in config[]
     GeminiConfig          ->  the gemini object
+    CodexConfig           ->  the codex object
 
 This is our own namespace, so unknown fields are forbidden (``extra="forbid"``)
 to catch typos. `plugin_extension()` extracts the bucket from a spec Plugin —
@@ -16,11 +17,14 @@ Example extensions["com.google.cloud.data.agent-plugins"] bucket (parsed into Pl
         {"key": "POSTGRES_HOST", "title": "Host",
          "description": "Host or IP address of the server", "sensitive": false}
       ],
-      "gemini": {"contextFileName": "POSTGRESQL.md", "mcpServerName": "postgresql"}
+      "gemini": {"contextFileName": "POSTGRESQL.md", "mcpServerName": "postgresql"},
+      "codex": {"interface": {"displayName": "Postgres", "category": "Databases"}}
     }
 """
 
 from __future__ import annotations
+
+from typing import Any
 
 import pydantic
 from pydantic.alias_generators import to_camel
@@ -42,6 +46,7 @@ class PluginExtension(pydantic.BaseModel):
     comment: str | None = None
     config: list[ConfigVar] = pydantic.Field(default_factory=list)
     gemini: GeminiConfig | None = None
+    codex: CodexConfig | None = None
 
 
 class ConfigVar(pydantic.BaseModel):
@@ -60,6 +65,14 @@ class GeminiConfig(pydantic.BaseModel):
 
     context_file_name: str | None = None
     mcp_server_name: str | None = None
+
+
+class CodexConfig(pydantic.BaseModel):
+    model_config = _STRICT
+
+    # Codex-owned shape (displayName, category, capabilities, defaultPrompt, ...),
+    # copied verbatim into .codex-plugin/plugin.json rather than modelled here.
+    interface: dict[str, Any] | None = None
 
 
 PluginExtension.model_rebuild()

@@ -267,6 +267,29 @@ class TestCodexGenerator:
         # Assert
         assert manifest["skills"] == "./skills"
 
+    def test_carries_codex_interface_verbatim(self, make_plugin, tmp_path):
+        """The Codex-only interface block survives regeneration unchanged."""
+        # Arrange
+        interface = {"displayName": "Demo", "category": "Storage", "capabilities": ["Read"]}
+        root = make_plugin(tmp_path, codex={"interface": interface})
+
+        # Act
+        manifest = generated_json(codex.generate_codex(loader.load_model(root)), ".codex-plugin/plugin.json")
+
+        # Assert
+        assert manifest["interface"] == interface
+
+    def test_omits_interface_when_absent(self, make_plugin, tmp_path):
+        """No codex.interface in the bucket means no interface key in the manifest."""
+        # Arrange
+        root = make_plugin(tmp_path)
+
+        # Act
+        manifest = generated_json(codex.generate_codex(loader.load_model(root)), ".codex-plugin/plugin.json")
+
+        # Assert
+        assert "interface" not in manifest
+
 
 class TestAntigravityGenerator:
     def test_emits_mcp_config_subset(self, make_plugin, tmp_path):
