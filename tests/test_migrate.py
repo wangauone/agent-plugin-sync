@@ -88,6 +88,21 @@ class TestMigrate:
         # Assert
         assert server["args"] == ["--tools-file", "${PLUGIN_ROOT}/tools.yaml", "--stdio"]
 
+    def test_omits_cwd_for_bare_command(self, tmp_path):
+        """A bare command (npx) has no `./` to anchor, so no cwd is emitted."""
+        # Arrange
+        gem = {
+            "name": "demo",
+            "mcpServers": {"demo": {"command": "npx", "args": ["--prebuilt", "demo", "--stdio"]}},
+        }
+        (tmp_path / "gemini-extension.json").write_text(json.dumps(gem), encoding="utf-8")
+
+        # Act
+        server = migrate.migrate(tmp_path).mcp["mcpServers"]["demo"]
+
+        # Assert
+        assert "cwd" not in server
+
     def test_sets_license_only_when_a_license_file_exists(self, tmp_path):
         """License is inferred from the presence of a LICENSE file, not assumed."""
         # Arrange

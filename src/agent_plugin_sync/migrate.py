@@ -79,15 +79,18 @@ def migrate(root: pathlib.Path) -> MigrateResult:
     if servers:
         mcp_servers: dict[str, Any] = {}
         for name, server in servers.items():
-            entry: dict[str, Any] = {
-                "type": "stdio",
-                "command": _to_spec_command(server["command"]),
-            }
+            command = _to_spec_command(server["command"])
+            entry: dict[str, Any] = {"type": "stdio", "command": command}
             if server.get("args"):
                 entry["args"] = [_to_spec_path(a) for a in server["args"]]
             if server.get("env"):
                 entry["env"] = {k: _to_spec_path(v) for k, v in server["env"].items()}
-            entry["cwd"] = "${PLUGIN_ROOT}"
+            # Only a `./`-relative command needs `cwd: ${PLUGIN_ROOT}` to resolve
+            # against. A bare command (npx, uvx) does not, and an unexpanded
+            # `${PLUGIN_ROOT}` cwd breaks harnesses that don't resolve it
+            # (Codex legacy, Antigravity).
+            if command.startswith("./"):
+                entry["cwd"] = "${PLUGIN_ROOT}"
             mcp_servers[name] = entry
         mcp = {"$schema": SPEC_MCP_SCHEMA, "mcpServers": mcp_servers}
 
