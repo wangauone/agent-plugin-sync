@@ -5,14 +5,21 @@ Generate harness-specific plugin manifests from a single [Agent Plugin spec](htt
 You edit **one** source (`plugin.json` + `mcp.json`). This tool derives the rest:
 
 ```
-plugin.json + mcp.json   ← the ONE source you edit
-        │ generate
-        ▼
-gemini-extension.json         (Gemini CLI)
-.claude-plugin/plugin.json    (Claude Code: manifest + inline MCP servers)
-.codex-plugin/plugin.json     (Codex: manifest)
-.codex-plugin/.mcp.json       (Codex: MCP servers + env_vars)
-mcp_config.json               (Antigravity: MCP servers)
+your-plugin-repo/
+├── plugin.json                   ← you edit
+├── mcp.json                      ← you edit
+├── skills/                       ← you write (optional)
+│
+├── gemini-extension.json         generated  (Gemini CLI)
+├── mcp_config.json               generated  (Antigravity)
+├── .claude-plugin/
+│   └── plugin.json               generated  (Claude Code: manifest + MCP)
+├── .codex-plugin/
+│   ├── plugin.json               generated  (Codex: manifest)
+│   └── .mcp.json                 generated  (Codex: MCP + env_vars)
+│
+└── .github/workflows/
+    └── agent-plugin-sync.yml     you add    (calls this repo's CI)
 ```
 
 ## Harness coverage
@@ -36,8 +43,7 @@ single-repo and monorepo models.
 
 # Use it in your plugin repo
 
-Three integration points. You write the two small files in steps 2 and 3; they
-point back at this repo.
+You write one small file (step 2) that points back at this repo.
 
 ## 1. Run it locally
 
