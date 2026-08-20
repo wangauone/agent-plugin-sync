@@ -1,5 +1,6 @@
 # CI for agent-plugin-sync itself.
 #
+# - `lint`: ruff. Runs on every push/PR and gates merges.
 # - `unit`: the fast, hermetic suite. Runs on every push/PR and gates merges.
 # - `integration`: drives real harness CLIs (`pytest -m integration`). These start
 #   an authenticated harness session, which CI runners don't have, so this job is
@@ -13,6 +14,14 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Ruff
+        run: uvx ruff check src tests
+
   unit:
     runs-on: ubuntu-latest
     steps:
