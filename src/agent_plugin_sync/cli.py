@@ -10,6 +10,8 @@ One-time onboarding utility:
 
     agent-plugin-sync migrate [root] [--force]   Seed plugin.json + mcp.json from gemini-extension.json
 
+`--version` prints the installed version.
+
 [root] defaults to the current directory. It may be a single plugin (contains
 plugin.json) or a monorepo (plugin.json in subdirectories); every plugin found is
 processed.
@@ -21,6 +23,7 @@ import argparse
 import pathlib
 import sys
 
+import agent_plugin_sync
 from agent_plugin_sync import generators, io, loader, migrate, validate
 from agent_plugin_sync.generators import artifact
 
@@ -28,6 +31,8 @@ from agent_plugin_sync.generators import artifact
 def main(argv: list[str] | None = None) -> None:
     """Parse arguments and dispatch to the selected command."""
     parser = argparse.ArgumentParser(prog="agent-plugin-sync")
+    # Printed in consumer CI logs, so a failure there names the version that ran.
+    parser.add_argument("--version", action="version", version=agent_plugin_sync.__version__)
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("generate", "validate", "migrate"):
         p = sub.add_parser(name)

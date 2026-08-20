@@ -13,7 +13,7 @@ on:
       ref:
         description: Git ref of agent-plugin-sync to run. Pin a release tag, not a branch.
         type: string
-        default: "0.1.1"
+        default: "0.1.1" # x-release-please-version
       auto_sync:
         description: Regenerate and commit drift back to the PR branch (same-repo branches only).
         type: boolean
