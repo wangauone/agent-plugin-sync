@@ -22,9 +22,8 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     env:
-      # The commit this very workflow file came from, i.e. whatever the caller
-      # pinned in `uses: ...@<ref>`. One pin decides both the workflow and the
-      # tool version; there is no second place to bump.
+      # Install the tool from the same commit as this workflow file, so the
+      # caller's `uses: ...@<ref>` is the only version to set.
       TOOL: git+https://github.com/wangauone/agent-plugin-sync@${{ job.workflow_sha }}
     steps:
       - name: Check out the PR branch
