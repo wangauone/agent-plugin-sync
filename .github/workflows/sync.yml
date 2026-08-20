@@ -11,9 +11,9 @@ on:
   workflow_call:
     inputs:
       ref:
-        description: Git ref of agent-plugin-sync to run.
+        description: Git ref of agent-plugin-sync to run. Pin a release tag, not a branch.
         type: string
-        default: main
+        default: "0.1.1"
       auto_sync:
         description: Regenerate and commit drift back to the PR branch (same-repo branches only).
         type: boolean

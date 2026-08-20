@@ -82,16 +82,20 @@ agent-plugin-sync migrate ./path/to/plugin-repo
 
 ## Run it
 
+Not on PyPI yet, so install from a release tag. Pin the tag rather than tracking
+`main`, so a change here cannot break your repo unannounced.
+
 Zero-install with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uvx agent-plugin-sync generate ./path/to/plugin-repo
+uvx --from git+https://github.com/wangauone/agent-plugin-sync@0.1.1 \
+  agent-plugin-sync generate ./path/to/plugin-repo
 ```
 
 Or install:
 
 ```bash
-pipx install agent-plugin-sync         # or: uv tool install agent-plugin-sync
+uv tool install git+https://github.com/wangauone/agent-plugin-sync@0.1.1
 agent-plugin-sync generate ./path/to/plugin-repo
 ```
 
