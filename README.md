@@ -47,12 +47,12 @@ You write one small file (step 2) that points back at this repo.
 
 ## 1. Run it locally
 
-Not on PyPI yet, so install from a release tag. Pin the tag rather than tracking
-`main`, so a change here cannot break your repo unannounced. Replace `0.1.1`
-with the [latest release](https://github.com/wangauone/agent-plugin-sync/releases).
+Not on PyPI yet, so run it straight from this repo. `@stable` always points at
+the [latest release](https://github.com/wangauone/agent-plugin-sync/releases),
+never at unreleased `main`.
 
 ```bash
-uvx --from git+https://github.com/wangauone/agent-plugin-sync@0.1.1 \
+uvx --from git+https://github.com/wangauone/agent-plugin-sync@stable \
   agent-plugin-sync generate .
 ```
 
@@ -60,7 +60,7 @@ Already have a `gemini-extension.json` and nothing else? Seed the source from it
 once, then review the inferred fields:
 
 ```bash
-uvx --from git+https://github.com/wangauone/agent-plugin-sync@0.1.1 \
+uvx --from git+https://github.com/wangauone/agent-plugin-sync@stable \
   agent-plugin-sync migrate .
 ```
 

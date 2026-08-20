@@ -1,0 +1,26 @@
+# Moves the `stable` tag to each new release, so ad-hoc commands can say
+# `@stable` and get the latest release without the docs naming a version.
+# Committed pins (the `uses:` line in consumer repos) stay on exact tags.
+name: stable-tag
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  move-stable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Point stable at the latest release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f stable "${{ github.sha }}"
+          git push -f origin stable
