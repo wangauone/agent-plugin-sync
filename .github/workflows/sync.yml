@@ -25,7 +25,7 @@ jobs:
       # The commit this very workflow file came from, i.e. whatever the caller
       # pinned in `uses: ...@<ref>`. One pin decides both the workflow and the
       # tool version; there is no second place to bump.
-      TOOL: git+https://github.com/wangauone/agent-plugin-sync@${{ github.job_workflow_sha }}
+      TOOL: git+https://github.com/wangauone/agent-plugin-sync@${{ job.workflow_sha }}
     steps:
       - name: Check out the PR branch
         uses: actions/checkout@v4

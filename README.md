@@ -170,4 +170,5 @@ tags it, bumping the version in `pyproject.toml` and `__init__.py`.
 
 release-please must not touch files under `.github/workflows/`: its token cannot
 write workflow files, and the run fails. `sync.yml` therefore carries no version;
-it installs the tool from `github.job_workflow_sha`, the commit the caller pinned.
+it installs the tool from `job.workflow_sha`, the commit the caller pinned. That
+context is unavailable on GitHub Enterprise Server.
