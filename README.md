@@ -47,12 +47,12 @@ You write one small file (step 2) that points back at this repo.
 
 ## 1. Run it locally
 
-Not on PyPI yet, so run it straight from this repo. `@stable` always points at
-the [latest release](https://github.com/wangauone/agent-plugin-sync/releases),
-never at unreleased `main`.
+Not on PyPI yet, so run it straight from this repo. Replace `VERSION` with the
+[latest release](https://github.com/wangauone/agent-plugin-sync/releases), for
+example `0.1.1`. Use a release rather than `main`, which may be unreleased work.
 
 ```bash
-uvx --from git+https://github.com/wangauone/agent-plugin-sync@stable \
+uvx --from git+https://github.com/wangauone/agent-plugin-sync@VERSION \
   agent-plugin-sync generate .
 ```
 
@@ -60,7 +60,7 @@ Already have a `gemini-extension.json` and nothing else? Seed the source from it
 once, then review the inferred fields:
 
 ```bash
-uvx --from git+https://github.com/wangauone/agent-plugin-sync@stable \
+uvx --from git+https://github.com/wangauone/agent-plugin-sync@VERSION \
   agent-plugin-sync migrate .
 ```
 
@@ -76,7 +76,7 @@ on: pull_request
 
 jobs:
   sync:
-    uses: wangauone/agent-plugin-sync/.github/workflows/sync.yml@0.1.1
+    uses: wangauone/agent-plugin-sync/.github/workflows/sync.yml@VERSION
 ```
 
 The tag on that `uses:` line picks both the workflow and the tool version it
@@ -88,7 +88,7 @@ Useful on Renovate PRs that bump an MCP server version:
 ```yaml
 jobs:
   sync:
-    uses: wangauone/agent-plugin-sync/.github/workflows/sync.yml@0.1.1
+    uses: wangauone/agent-plugin-sync/.github/workflows/sync.yml@VERSION
     with:
       auto_sync: true
     permissions:
