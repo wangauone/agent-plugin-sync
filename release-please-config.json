@@ -28,8 +28,7 @@
       "release-type": "python",
       "package-name": "agent-plugin-sync",
       "extra-files": [
-        "src/agent_plugin_sync/__init__.py",
-        ".github/workflows/sync.yml"
+        "src/agent_plugin_sync/__init__.py"
       ]
     }
   }

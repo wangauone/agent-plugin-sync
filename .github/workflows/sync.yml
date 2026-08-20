@@ -10,10 +10,6 @@ name: agent-plugin-sync
 on:
   workflow_call:
     inputs:
-      ref:
-        description: Git ref of agent-plugin-sync to run. Pin a release tag, not a branch.
-        type: string
-        default: "0.1.1" # x-release-please-version
       auto_sync:
         description: Regenerate and commit drift back to the PR branch (same-repo branches only).
         type: boolean
@@ -26,7 +22,10 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     env:
-      TOOL: git+https://github.com/wangauone/agent-plugin-sync@${{ inputs.ref }}
+      # The commit this very workflow file came from, i.e. whatever the caller
+      # pinned in `uses: ...@<ref>`. One pin decides both the workflow and the
+      # tool version; there is no second place to bump.
+      TOOL: git+https://github.com/wangauone/agent-plugin-sync@${{ github.job_workflow_sha }}
     steps:
       - name: Check out the PR branch
         uses: actions/checkout@v4
