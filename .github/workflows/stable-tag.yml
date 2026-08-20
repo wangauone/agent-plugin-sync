@@ -25,8 +25,11 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           tag="${RELEASE_TAG:-$(gh release view --json tagName -q .tagName)}"
-          echo "stable -> $tag"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -f stable "$tag^{commit}"
-          git push -f origin stable
+          sha="$(git rev-parse "$tag^{commit}")"
+          echo "stable -> $tag ($sha)"
+          # Via the refs API, not `git push`: GITHUB_TOKEN may not move a ref whose
+          # commit carries different workflow files.
+          gh api -X PATCH "repos/${{ github.repository }}/git/refs/tags/stable" \
+            -f sha="$sha" -F force=true \
+            || gh api -X POST "repos/${{ github.repository }}/git/refs" \
+                 -f ref="refs/tags/stable" -f sha="$sha"
