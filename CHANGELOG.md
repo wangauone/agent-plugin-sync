@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.2](https://github.com/wangauone/agent-plugin-sync/compare/0.1.1...0.1.2) (2026-08-20)
+
+
+### Features
+
+* **ci:** move a stable tag on each release for ad-hoc runs ([6502afe](https://github.com/wangauone/agent-plugin-sync/commit/6502afe71e762d4e438d4df01876d843eb3a8e88))
+
+
+### Bug Fixes
+
+* **ci:** move the stable tag through the refs API ([07a4ba7](https://github.com/wangauone/agent-plugin-sync/commit/07a4ba71aa3ed2129fcf96a9729955b15e0dc1d4))
+* **ci:** point stable at the latest release, not the branch head ([8d6ecc7](https://github.com/wangauone/agent-plugin-sync/commit/8d6ecc7a30b1bbcfdc80634a95eaeba9d65ee8db))
+* **ci:** resolve the tool version from job_workflow_sha ([8dcdfb3](https://github.com/wangauone/agent-plugin-sync/commit/8dcdfb325edf0175b6f9a7ec2283867175cdd4fe))
+* **ci:** use job.workflow_sha, the documented context name ([7aa088f](https://github.com/wangauone/agent-plugin-sync/commit/7aa088f0449daa0855a7206893e07ec6fe0237b8))
+
 ## [0.1.1](https://github.com/wangauone/agent-plugin-sync/compare/0.1.0...0.1.1) (2026-08-20)
 
 
