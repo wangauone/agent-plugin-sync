@@ -19,8 +19,14 @@ jobs:
         with:
           fetch-depth: 0
       - name: Point stable at the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Empty on workflow_dispatch, where we look the latest release up instead.
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
+          tag="${RELEASE_TAG:-$(gh release view --json tagName -q .tagName)}"
+          echo "stable -> $tag"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -f stable "${{ github.sha }}"
+          git tag -f stable "$tag^{commit}"
           git push -f origin stable
