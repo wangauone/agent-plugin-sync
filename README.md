@@ -89,26 +89,10 @@ jobs:
       contents: write
 ```
 
-## 3. pre-commit: regenerate before the commit lands
+## 3. Keep the pin current
 
-Add to **your** `.pre-commit-config.yaml`:
-
-```yaml
-repos:
-  - repo: https://github.com/wangauone/agent-plugin-sync
-    rev: "0.1.1"
-    hooks:
-      - id: agent-plugin-sync
-```
-
-The hook runs `generate` when `plugin.json` or `mcp.json` changes. If anything
-was rewritten, the commit fails so you re-stage the generated files.
-
-## 4. Keep the pins current
-
-No custom config needed. Renovate's built-in managers already understand both
-pins: the `github-actions` manager bumps the `uses:` tag, and the `pre-commit`
-manager bumps `rev`. Enable Renovate on your repo and it opens the PRs.
+No custom config needed. Renovate's built-in `github-actions` manager bumps the
+`uses:` tag. Enable Renovate on your repo and it opens the PRs.
 
 ## What you write vs what is generated
 
@@ -116,7 +100,6 @@ manager bumps `rev`. Enable Renovate on your repo and it opens the PRs.
 | --- | --- |
 | `plugin.json`, `mcp.json` | **you** (the only source) |
 | `.github/workflows/agent-plugin-sync.yml` | **you** (5 lines, calls this repo) |
-| `.pre-commit-config.yaml` | **you** (4 lines, points at this repo) |
 | `gemini-extension.json`, `.claude-plugin/`, `.codex-plugin/`, `mcp_config.json` | generated, never hand-edit |
 
 ## Source of truth
@@ -172,7 +155,6 @@ Which files serve whom:
 | File | Audience |
 | --- | --- |
 | `.github/workflows/sync.yml` | **other repos** call it; do not copy it |
-| `.pre-commit-hooks.yaml` | **other repos** reference it; do not copy it |
 | `.github/workflows/tests.yml` | this repo (lint + unit on every PR) |
 | `.github/workflows/release-please.yml` | this repo (opens the release PR) |
 | `release-please-config.json`, `.release-please-manifest.json` | this repo (release config) |
