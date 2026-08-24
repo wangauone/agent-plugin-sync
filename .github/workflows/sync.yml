@@ -21,10 +21,6 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    env:
-      # Install the tool from the same commit as this workflow file, so the
-      # caller's `uses: ...@<ref>` is the only version to set.
-      TOOL: git+https://github.com/wangauone/agent-plugin-sync@${{ job.workflow_sha }}
     steps:
       - name: Check out the PR branch
         uses: actions/checkout@v4
@@ -35,8 +31,13 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v6
 
+      # `job.workflow_sha` is the commit this workflow file came from, so the tool
+      # is installed at the version the caller pinned in `uses: ...@<ref>`. The
+      # `job` context exists only inside steps, never in job-level `env`.
       - name: Regenerate and commit drift
         if: ${{ inputs.auto_sync }}
+        env:
+          TOOL: git+https://github.com/wangauone/agent-plugin-sync@${{ job.workflow_sha }}
         run: |
           uvx --from "$TOOL" agent-plugin-sync generate .
           if [[ -z "$(git status --porcelain)" ]]; then
@@ -52,4 +53,6 @@ jobs:
           git push
 
       - name: Validate
+        env:
+          TOOL: git+https://github.com/wangauone/agent-plugin-sync@${{ job.workflow_sha }}
         run: uvx --from "$TOOL" agent-plugin-sync validate .
