@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/wangauone/agent-plugin-sync/compare/0.1.2...0.1.3) (2026-08-24)
+
+
+### Bug Fixes
+
+* **ci:** read job.workflow_sha in step env, not job env ([00dca68](https://github.com/wangauone/agent-plugin-sync/commit/00dca685ab3a7eeedab7666db406a3d163d2684c))
+
 ## [0.1.2](https://github.com/wangauone/agent-plugin-sync/compare/0.1.1...0.1.2) (2026-08-20)
 
 
