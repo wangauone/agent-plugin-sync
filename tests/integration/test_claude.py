@@ -2,6 +2,13 @@
 skill, `--config` sets the userConfig the server resolves
 (`${user_config.demo_host}`), and a session starts the server (via the generated
 `${CLAUDE_PLUGIN_ROOT}` command). Needs a session (auth), so it's `integration`.
+
+Checks:
+    1. `plugin marketplace add` + `plugin install` accept the generated files.
+    2. `plugin details` reports the skill.
+    3. `--config demo_host=...` sets the userConfig declared in the manifest.
+    4. A session starts the server via `${CLAUDE_PLUGIN_ROOT}`, and the config
+       value arrives as DEMO_HOST (`${user_config.demo_host}` resolved).
 """
 
 from __future__ import annotations
