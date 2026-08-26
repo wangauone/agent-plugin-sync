@@ -36,15 +36,16 @@ def validate_plugin(root: pathlib.Path) -> ValidationResult:
         # Malformed top level; can't check the bucket meaningfully after this.
         return ValidationResult(ok=False, errors=_format(e, "plugin.json"))
 
-    # Codex reads a root manifest as Agent Plugin (and so uses the spec mcp.json,
-    # which cannot forward user env vars) only when its $schema is an agent-plugins
-    # URI. We route Codex to the generated .codex-plugin/ instead, so $schema must
-    # be absent; with it present, that generated file is silently ignored.
-    schema = raw.get("$schema", "")
-    if isinstance(schema, str) and schema.startswith(_AGENT_PLUGIN_SCHEMA_PREFIX):
+    # A spec client recognises the manifest by its $schema, so it must be an
+    # agent-plugins URI. Codex 0.150.0 and later still forward user env vars in that
+    # case: they overlay the generated .codex-plugin/ env_vars onto the spec servers
+    # (openai/codex#40363). Older Codex ignores that overlay, so plugins targeting
+    # 0.149.x and earlier must stay on an older release of this tool.
+    schema = raw.get("$schema")
+    if not (isinstance(schema, str) and schema.startswith(_AGENT_PLUGIN_SCHEMA_PREFIX)):
         errors.append(
-            "plugin.json: omit $schema; with it, Codex reads the spec mcp.json and ignores "
-            "the generated .codex-plugin/ (its env_vars)"
+            f"plugin.json: $schema must be an Agent Plugin spec URI ({_AGENT_PLUGIN_SCHEMA_PREFIX}...); "
+            "without it a spec client does not recognise the manifest"
         )
 
     bucket = plugin.extensions.get(agent_plugin_sync.PLUGIN_EXTENSION_NS, {})

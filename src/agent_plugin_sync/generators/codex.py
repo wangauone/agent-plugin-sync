@@ -2,10 +2,11 @@
 
 Codex reads the Agent Plugin spec, but its spec `mcp.json` cannot forward user
 environment variables to an MCP server (`env_vars` is rejected, `${VAR}` in `env`
-is not expanded, ambient env is cleared). So we target Codex's **legacy**
+is not expanded, ambient env is cleared). So we also emit Codex's **legacy**
 `.codex-plugin/` format, whose `env_vars` list forwards named vars from the user
-environment. For Codex to use these files the root `plugin.json` must omit
-`$schema`; see docs/harness-plugin-layouts.md.
+environment. Codex 0.150.0+ overlays those `env_vars` onto the spec servers of the
+same name, so the root `plugin.json` keeps its `$schema`; see
+docs/harness-plugin-layouts.md.
 
 Config vars (`com.google.cloud.data.agent-plugins.config`) become `env_vars` on
 each server. The manifest references the sibling MCP file with a **root-relative**

@@ -32,7 +32,7 @@ def make_plugin():
         codex: dict | None = None,
         mcp: dict | None = None,
         skills: bool = False,
-        schema: bool = False,
+        schema: bool = True,
     ) -> pathlib.Path:
         root = pathlib.Path(root)
         ns: dict = {}
@@ -43,8 +43,8 @@ def make_plugin():
         if codex is not None:
             ns["codex"] = codex
 
-        # $schema is omitted by default: with it, Codex ignores the generated
-        # .codex-plugin/. `schema=True` opts in to exercise that validation error.
+        # $schema is present by default: a spec client needs it to recognise the
+        # manifest. `schema=False` opts out to exercise that validation error.
         plugin: dict = {
             "name": name,
             "version": "0.1.0",
