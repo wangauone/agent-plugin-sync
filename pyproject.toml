@@ -1,6 +1,6 @@
 [project]
 name = "agent-plugin-sync"
-version = "0.1.3"
+version = "0.1.4"
 description = "Generate harness-specific plugin manifests (Gemini CLI, Claude Code, Codex, Antigravity) from a single Agent Plugin spec source (plugin.json + mcp.json)."
 readme = "README.md"
 license = "Apache-2.0"

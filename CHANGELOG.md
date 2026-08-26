@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/wangauone/agent-plugin-sync/compare/0.1.3...0.1.4) (2026-08-26)
+
+
+### Features
+
+* require $schema in plugin.json ([#4](https://github.com/wangauone/agent-plugin-sync/issues/4)) ([a2ed746](https://github.com/wangauone/agent-plugin-sync/commit/a2ed7460acc2bf78484b44cc03af974728bb7b25))
+
 ## [0.1.3](https://github.com/wangauone/agent-plugin-sync/compare/0.1.2...0.1.3) (2026-08-24)
 
 
