@@ -54,9 +54,9 @@ Source: https://github.com/agentplugins/agent-plugins-spec/blob/main/spec/1.0.0.
 - MCP loads **only** from root `mcp.json` — inline config / alternate paths forbidden.
 - Skill discovery is **non-recursive** (immediate children of `skills/`).
 
-> The spec requires `$schema`, but our **shipped** `plugin.json` currently omits
-> it so Codex routes to `.codex-plugin/` (see [Codex](#codex)). It goes back once
-> Codex can pass user config through the spec.
+> `$schema` is required, and `validate` enforces it. It was omitted for a while so
+> Codex would route to `.codex-plugin/`; Codex 0.150.0 removed that need (see
+> [Codex](#codex)).
 
 ---
 
@@ -107,11 +107,14 @@ environment variables to an MCP server: `env_vars` is rejected, `${VAR}` in `env
 is not expanded, and the ambient env is cleared
 ([openai/codex#36854](https://github.com/openai/codex/issues/36854)). So we
 generate Codex's **legacy** `.codex-plugin/` layout in every case, which does
-forward `env_vars`.
+forward `env_vars`. Since
+[0.150.0](https://github.com/openai/codex/commit/40b7560169c7274147a47f9b0c75db89fe016d34)
+Codex reads the spec manifest and *overlays* those `env_vars` onto servers of the
+same name, so both files are used together.
 
 ```
 <plugin-root>/
-├── plugin.json               # spec manifest, but WITHOUT $schema (see below)
+├── plugin.json               # spec manifest, with $schema
 ├── .codex-plugin/
 │   ├── plugin.json           # legacy manifest; mcpServers -> "./.codex-plugin/.mcp.json"
 │   └── .mcp.json             # legacy MCP: command/args + env_vars (forwarded from user env)
@@ -119,17 +122,20 @@ forward `env_vars`.
     └── <name>/SKILL.md
 ```
 
-- **Omit `$schema` from the root `plugin.json`.** Codex treats a root manifest as
-  Agent Plugin only when its `$schema` is an `agent-plugins.org` URI; without it,
-  Codex falls through to `.codex-plugin/`.
+- **Keep `$schema` in the root `plugin.json`.** Codex treats a root manifest as
+  Agent Plugin only when its `$schema` is an `agent-plugins.org` URI. It then takes
+  the `env_vars` from `.codex-plugin/` and applies them to the matching spec
+  servers, so server names must match across `mcp.json` and
+  `.codex-plugin/.mcp.json`. **Requires Codex 0.150.0+**; older versions ignore the
+  overlay, leaving user config unforwarded.
 - The `mcpServers` path in `.codex-plugin/plugin.json` is **root-relative**
   (`./.codex-plugin/.mcp.json`), not relative to `.codex-plugin/`.
 - `.codex-plugin/.mcp.json` uses `env_vars: [...]` so the user's environment
   reaches the server, the capability the spec `mcp.json` lacks.
 - Install/discovery still needs a marketplace descriptor (`.claude-plugin/marketplace.json`).
 
-> When Codex can pass user config through the spec, add `$schema` back and drop
-> this generator; Codex (and the other spec-only clients) then read the spec directly.
+> Once the spec itself can forward user env vars, drop this generator; Codex and
+> the other spec clients then need nothing but `plugin.json` + `mcp.json`.
 
 ---
 

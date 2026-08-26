@@ -21,11 +21,11 @@ class TestValidatePlugin:
         # Assert
         assert result.ok, result.errors
 
-    def test_rejects_agent_plugin_schema_on_root_manifest(self, make_plugin, tmp_path):
-        """A root plugin.json $schema routes Codex to the spec mcp.json, silently
-        ignoring the generated .codex-plugin/, so it must be omitted."""
+    def test_rejects_root_manifest_without_agent_plugin_schema(self, make_plugin, tmp_path):
+        """Without an agent-plugins $schema a spec client does not recognise the
+        manifest, so it is required."""
         # Arrange
-        root = make_plugin(tmp_path, schema=True)
+        root = make_plugin(tmp_path, schema=False)
 
         # Act
         result = validate.validate_plugin(root)
