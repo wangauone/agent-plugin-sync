@@ -2,6 +2,12 @@
 the extension and its skill, the generated `${extensionPath}` command resolves the
 committed probe, and an ambient env var reaches the server.
 
+Checks:
+    1. `gemini extensions install <dir>` accepts the generated extension.
+    2. The extension and its skill are listed after install.
+    3. The `${extensionPath}` command in gemini-extension.json resolves.
+    4. An ambient env var reaches the MCP server.
+
 Gemini forwards the ambient environment. It prompts to trust the folder (answered
 on stdin) and installs into the real home; the `_clean_gemini` fixture uninstalls
 before and after (before too, to recover from a crashed prior run).

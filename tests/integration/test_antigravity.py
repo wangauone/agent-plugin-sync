@@ -1,6 +1,11 @@
 """Antigravity end-to-end via folder install: `agy plugin install <dir>` loads the
 skill and MCP server, and an ambient env var reaches the server.
 
+Checks:
+    1. `agy plugin install <dir>` accepts the generated files.
+    2. It reports exactly one skill and one MCP server.
+    3. An ambient env var reaches the MCP server.
+
 AGY forwards the ambient environment. It can't resolve a `./` command, so we point
 it at the committed probe by absolute path. Auth lives under HOME (can't isolate),
 so we install into the real home; the `_clean_agy` fixture uninstalls before and

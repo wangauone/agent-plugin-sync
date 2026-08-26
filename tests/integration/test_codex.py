@@ -1,6 +1,13 @@
 """Codex end-to-end via folder install: the plugin installs, its MCP server starts,
 and a user env var resolves into it.
 
+Checks:
+    1. Marketplace install accepts the generated files.
+    2. A session starts the MCP server.
+    3. A user env var reaches it, i.e. Codex applied the `.codex-plugin/`
+       `env_vars` overlay to the spec server. **Needs Codex 0.150.0+**; older
+       versions read the spec mcp.json only and drop the variable.
+
 Codex-legacy can't resolve a `./` command, so we point it at the committed probe
 by absolute path. Needs a session (auth), so it's marked `integration`.
 """
